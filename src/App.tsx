@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
+import type { RenderedPage } from './services/pdf-render';
+import type { TranslatedPage } from './services/pdf-generate';
 import './App.css';
 
 const MAX_PAGES = 60;
+const CONCURRENT_PAGES = 4; // páginas traducidas en paralelo
 
 type Lang = 'es' | 'en';
 
@@ -113,21 +116,24 @@ export default function App() {
 
       // Traduce el texto de cada página (sin perder el formato: la imagen de la
       // página original se conserva y el texto traducido se dibuja sobre ella).
-      const translatedPages = [];
-      for (const page of selected) {
+      // Se traducen varias páginas en paralelo para acelerar el proceso.
+      setMessage('Traduciendo páginas…');
+      const translatePage = async (page: RenderedPage): Promise<TranslatedPage> => {
         const items = [];
         for (const item of page.textItems) {
-          setMessage(`Traduciendo página ${selected.indexOf(page) + 1}…`);
           // eslint-disable-next-line no-await-in-loop
           const translated = await translateText(item.str, toLang);
           items.push({ str: translated, x: item.x, y: item.y, height: item.height });
         }
-        translatedPages.push({
-          image: page.image,
-          pageWidth: page.pageWidth,
-          pageHeight: page.pageHeight,
-          items,
-        });
+        return { image: page.image, pageWidth: page.pageWidth, pageHeight: page.pageHeight, items };
+      };
+
+      const translatedPages: TranslatedPage[] = [];
+      for (let i = 0; i < selected.length; i += CONCURRENT_PAGES) {
+        const batch = selected.slice(i, i + CONCURRENT_PAGES);
+        // eslint-disable-next-line no-await-in-loop
+        const batchResults = await Promise.all(batch.map((p) => translatePage(p)));
+        translatedPages.push(...batchResults);
       }
 
       setMessage('Generando el PDF traducido…');
