@@ -1,7 +1,7 @@
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 
-// En webpack 5, lo típico para resolver el worker del pdf.js al empaquetar.
-GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).href;
+// El worker se sirve desde public/ (CRA lo copia a la raíz del build/dev server).
+GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL || ''}pdf.worker.min.mjs`;
 
 export interface PdfPageText {
   pageNumber: number;
