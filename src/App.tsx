@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
 
-const MAX_PAGES = 50;
+const MAX_PAGES = 60;
 
 type Lang = 'es' | 'en';
 
