@@ -1,47 +1,32 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
-const PAGE_WIDTH = 612; // Carta, sin cambiar el formato original de las páginas
-const PAGE_HEIGHT = 792;
-const MARGIN = 40;
-const SIZE = 11;
-const LINE_HEIGHT = SIZE * 1.2;
-
-type Font = { widthOfTextAtSize: (text: string, size: number) => number };
-
-function wrapWords(words: string[], font: Font, maxWidth: number): string[] {
-  const lines: string[] = [];
-  let current = '';
-  for (const word of words) {
-    const candidate = current ? `${current} ${word}` : word;
-    if (current && font.widthOfTextAtSize(candidate, SIZE) > maxWidth) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = candidate;
-    }
-  }
-  if (current) lines.push(current);
-  return lines;
+export interface TranslatedPage {
+  image: string;
+  pageWidth: number;
+  pageHeight: number;
+  items: { str: string; x: number; y: number; height: number }[];
 }
 
-export async function generatePdf(pages: { pageNumber: number; text: string }[]): Promise<Blob> {
+/** Genera un PDF nuevo: cada página es la imagen renderizada de la página original
+ *  con el texto traducido dibujado sobre ella (mantiene el formato original:
+ *  diagramas, imágenes y layout). */
+export async function generatePdf(pages: TranslatedPage[]): Promise<Blob> {
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
-  const maxWidth = PAGE_WIDTH - MARGIN * 2;
 
-  for (const pageText of pages) {
-    let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-    const words = pageText.text.split(/\s+/).filter(Boolean);
-    const lines = wrapWords(words, font, maxWidth);
-    let y = PAGE_HEIGHT - MARGIN - LINE_HEIGHT;
-    for (const line of lines) {
-      if (y < MARGIN + LINE_HEIGHT) {
-        // Si el texto no cabe en una página, continúa en la siguiente.
-        page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-        y = PAGE_HEIGHT - MARGIN - LINE_HEIGHT;
-      }
-      page.drawText(line, { x: MARGIN, y, size: SIZE, font, color: rgb(0.1, 0.1, 0.1) });
-      y -= LINE_HEIGHT;
+  for (const pageData of pages) {
+    const page = doc.addPage([pageData.pageWidth, pageData.pageHeight]);
+    const png = await doc.embedPng(pageData.image);
+    page.drawImage(png, { x: 0, y: 0, width: pageData.pageWidth, height: pageData.pageHeight });
+    for (const item of pageData.items) {
+      if (!item.str.trim()) continue;
+      page.drawText(item.str, {
+        x: item.x,
+        y: item.y,
+        size: item.height || 11,
+        font,
+        color: rgb(0.1, 0.1, 0.1),
+      });
     }
   }
 

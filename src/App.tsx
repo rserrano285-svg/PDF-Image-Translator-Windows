@@ -12,6 +12,7 @@ interface PdfResult {
   pageCount: number;
   totalPages: number;
   texts: string[];
+  pageImages: string[];
 }
 
 interface ImageResult {
@@ -97,12 +98,12 @@ export default function App() {
     setWarning('');
     setMessage('Leyendo el PDF…');
     try {
-      const { extractPdfText } = await import('./services/pdf-text');
+      const { renderPdfPages } = await import('./services/pdf-render');
       const { generatePdf } = await import('./services/pdf-generate');
       const { translateText } = await import('./services/translate');
 
       const buf = await file.arrayBuffer();
-      const pages = await extractPdfText(buf);
+      const pages = await renderPdfPages(buf);
       const limited = pages.length > MAX_PAGES;
       const selected = limited ? pages.slice(0, MAX_PAGES) : pages;
 
@@ -110,16 +111,28 @@ export default function App() {
         setWarning(`El PDF tiene ${pages.length} páginas; se traducen las primeras ${MAX_PAGES}.`);
       }
 
-      const texts: string[] = [];
+      // Traduce el texto de cada página (sin perder el formato: la imagen de la
+      // página original se conserva y el texto traducido se dibuja sobre ella).
+      const translatedPages = [];
       for (const page of selected) {
-        setMessage(`Traduciendo página ${page.pageNumber}…`);
-        // eslint-disable-next-line no-await-in-loop
-        texts.push(await translateText(page.text, toLang));
+        const items = [];
+        for (const item of page.textItems) {
+          setMessage(`Traduciendo página ${selected.indexOf(page) + 1}…`);
+          // eslint-disable-next-line no-await-in-loop
+          const translated = await translateText(item.str, toLang);
+          items.push({ str: translated, x: item.x, y: item.y, height: item.height });
+        }
+        translatedPages.push({
+          image: page.image,
+          pageWidth: page.pageWidth,
+          pageHeight: page.pageHeight,
+          items,
+        });
       }
 
-      const blob = await generatePdf(
-        selected.map((p, i) => ({ pageNumber: p.pageNumber, text: texts[i] }))
-      );
+      setMessage('Generando el PDF traducido…');
+      const blob = await generatePdf(translatedPages);
+      const pageImages = (await renderPdfPages(await blob.arrayBuffer())).map((p) => p.image);
 
       setResult({
         type: 'pdf',
@@ -127,7 +140,8 @@ export default function App() {
         downloadName: file.name.replace(/\.pdf$/i, '') + '_traducido.pdf',
         pageCount: selected.length,
         totalPages: pages.length,
-        texts,
+        texts: translatedPages.map((p) => p.items.map((i) => i.str).join('\n')),
+        pageImages,
       });
       setMessage('');
       setStatus('idle');
@@ -236,6 +250,14 @@ export default function App() {
                   {result.totalPages > result.pageCount ? ` de ${result.totalPages}` : ''})
                 </a>
               </div>
+              {result.pageImages && result.pageImages.length > 0 && (
+                <div className="preview-scroll">
+                  <h3>Vista previa</h3>
+                  {result.pageImages.map((src, i) => (
+                    <img key={i} className="pdf-page-preview" src={src} alt={`Página ${i + 1}`} />
+                  ))}
+                </div>
+              )}
               {result.texts.map((t, i) => (
                 <details key={i} className="page-text">
                   <summary>Página {i + 1}</summary>

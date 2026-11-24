@@ -249,3 +249,26 @@ input[type='file'] {
   color: var(--muted);
   margin: 0;
 }
+
+.preview-scroll {
+  margin: 0.75rem 0;
+  max-height: 480px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.5rem;
+}
+
+.preview-scroll h3 {
+  margin: 0.5rem 0.25rem;
+  font-size: 0.95rem;
+}
+
+.pdf-page-preview {
+  width: 100%;
+  display: block;
+  margin: 0.5rem 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
