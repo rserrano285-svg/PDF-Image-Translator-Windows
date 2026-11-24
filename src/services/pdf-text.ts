@@ -1,7 +1,8 @@
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 
-// El worker se sirve desde public/ (CRA lo copia a la raíz del build/dev server).
-GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL || ''}pdf.worker.min.mjs`;
+// URL absoluta del worker (pdf.js lo importa dinámicamente en el fallback de "fake worker").
+const workerUrl = new URL(`${process.env.PUBLIC_URL || '/'}pdf.worker.min.mjs`, window.location.href).href;
+GlobalWorkerOptions.workerSrc = workerUrl;
 
 export interface PdfPageText {
   pageNumber: number;
