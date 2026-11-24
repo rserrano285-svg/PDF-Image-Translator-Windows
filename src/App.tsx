@@ -144,7 +144,7 @@ export default function App() {
     setMessage('Reconociendo y traduciendo el texto de la imagen…');
     try {
       const { translateImageToCanvas, canvasToBlob } = await import('./services/image-translate');
-      const { canvas, text } = await translateImageToCanvas(file);
+      const { canvas } = await translateImageToCanvas(file);
       const blob = await canvasToBlob(canvas, file.type || 'image/png');
       setResult({
         type: 'image',
