@@ -1,0 +1,10 @@
+appId: com.rserr.pdf_image_translator
+productName: PDF Image Translator
+extraMetadata:
+  main: electron/main.cjs
+files:
+  - build/**/*
+  - electron/**/*
+  - package.json
+nsis:
+  createDesktopShortcut: always

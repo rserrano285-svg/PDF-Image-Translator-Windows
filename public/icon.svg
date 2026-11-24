@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#123b73"/>
+      <stop offset="1" stop-color="#0a2850"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="88" fill="url(#bg)"/>
+
+  <!-- Página del documento (PDF) -->
+  <rect x="142" y="166" width="124" height="156" rx="8" fill="#c62828"/>
+  <rect x="142" y="166" width="124" height="18" rx="4" fill="#c62828"/>
+  <rect x="142" y="184" width="124" fill="#c62828"/>
+
+  <!-- Texto blanco sobre el documento -->
+  <g fill="#ffffff" fill-opacity="0.92">
+    <rect x="174" y="208" width="76" height="10"/>
+    <rect x="174" y="228" width="46" height="10"/>
+    <rect x="174" y="248" width="64" height="10"/>
+  </g>
+
+  <!-- Símbolo de traducción: dos flechas entrelazadas sobre un círculo -->
+  <g stroke="#42a5f5" stroke-width="12" fill="none" stroke-linecap="round">
+    <path d="M330 190c-26-26-44-30-64-4"/>
+    <path d="M344 188c18-22 32-20 48 2"/>
+    <path d="M366 190c26 26 44 30 64 4"/>
+    <path d="M352 196c-18 22-32 20-48-2"/>
+  </g>
+  <circle cx="318" cy="248" r="16" fill="#42a5f5"/>
+  <circle cx="390" cy="284" r="16" fill="#42a5f5"/>
+</svg>
