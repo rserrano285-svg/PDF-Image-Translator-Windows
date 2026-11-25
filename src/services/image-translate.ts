@@ -107,15 +107,13 @@ function replaceLine(ctx: CanvasRenderingContext2D, line: OcrLine, text: string)
   const bg = sampleBackground(ctx, x, y, w, h);
   const ink = sampleInk(ctx, x, y, w, h, bg);
 
-  ctx.fillStyle = toHex(bg);
-  ctx.fillRect(x, y, w, h);
-
-  let size = Math.max(6, Math.min(h * 0.9, 32));
+  // Cada línea conserva el tamaño de letra del texto original (títulos
+  // grandes, cuerpo pequeño); no se reduce para caber en su ancho.
+  const size = Math.max(6, Math.min(line.h, ctx.canvas.height));
   ctx.font = `bold ${size}px sans-serif`;
-  while (ctx.measureText(text).width > w * 1.05 && size > 6) {
-    size -= 0.5;
-    ctx.font = `bold ${size}px sans-serif`;
-  }
+  const drawWidth = Math.min(ctx.canvas.width - x, Math.max(w, Math.ceil(ctx.measureText(text).width) + 4));
+  ctx.fillStyle = toHex(bg);
+  ctx.fillRect(x, y, drawWidth, h);
 
   let color = ink ?? (luminance(bg) < 0.5 ? { r: 255, g: 255, b: 255 } : { r: 0, g: 0, b: 0 });
   if (Math.abs(luminance(color) - luminance(bg)) < 0.25) {
