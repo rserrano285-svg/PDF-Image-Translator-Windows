@@ -64,10 +64,27 @@ html.dark body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-weight: 800;
-  font-size: 1rem;
-  letter-spacing: 0.5px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+}
+
+.brand .mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.icon-btn span {
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
 .header h1 {
@@ -388,4 +405,43 @@ html.dark .preview-scroll {
 .hint {
   color: var(--muted);
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.upload-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--brand);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.busy-msg {
+  color: var(--brand);
+}
+
+.progress {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--brand), #93c5fd, var(--brand));
+  background-size: 200% 100%;
+  animation: shimmer 1.1s linear infinite;
+  margin-top: 0.35rem;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }

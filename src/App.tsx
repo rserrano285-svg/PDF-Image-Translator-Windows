@@ -38,10 +38,6 @@ interface ImageResult {
   type: 'image';
   blobUrl: string;
   downloadName: string;
-  /** Texto detectado por OCR en la imagen. */
-  ocrText: string;
-  /** Texto traducido que se dibujó sobre la imagen. */
-  text: string;
 }
 
 type Result = PdfResult | ImageResult | null;
@@ -271,7 +267,7 @@ export default function App() {
     setMessage('Reconociendo y traduciendo el texto de la imagen…');
     try {
       const { translateImageToCanvas, canvasToBlob } = await import('./services/image-translate');
-      const { canvas, text, ocrText } = await translateImageToCanvas(file, toLang);
+      const { canvas, text } = await translateImageToCanvas(file, toLang);
       if (!text.trim()) {
         setWarning('No se encontró texto que traducir en la imagen.');
         setStatus('idle');
@@ -282,8 +278,6 @@ export default function App() {
         type: 'image',
         blobUrl: URL.createObjectURL(blob),
         downloadName: file.name,
-        ocrText,
-        text,
       });
       setMessage('');
       setStatus('idle');
@@ -296,16 +290,21 @@ export default function App() {
   return (
     <div className="page">
       <header className="header">
-        <div>
-          <h1>Traductor de PDF e imágenes</h1>
-          <p className="sub">
-            Traduce PDFs de hasta {MAX_PAGES} páginas y imágenes; el resultado conserva el formato
-            original.
-          </p>
+        <div className="brand">
+          <span className="mark">
+            <img src={`${process.env.PUBLIC_URL || ''}icon.svg`} alt="" />
+          </span>
+          <div>
+            <h1>Traductor de PDF e imágenes</h1>
+            <p className="sub">
+              Traduce PDFs de hasta {MAX_PAGES} páginas y imágenes; el resultado conserva el formato
+              original.
+            </p>
+          </div>
         </div>
         <div className="header-actions">
-          <button type="button" className="btn secondary" onClick={toggleDarkMode}>
-            {dark ? 'Modo claro' : 'Modo oscuro'}
+          <button type="button" className="btn secondary icon-btn" onClick={toggleDarkMode}>
+            <span aria-hidden="true">{dark ? '☀' : '☾'}</span> {dark ? 'Modo claro' : 'Modo oscuro'}
           </button>
         </div>
       </header>
@@ -338,7 +337,12 @@ export default function App() {
                 </span>
               </span>
             ) : (
-              <span className="hint">Arrastra un archivo aquí o haz clic para elegirlo</span>
+              <span className="hint">
+                <span className="upload-icon" aria-hidden="true">
+                  ⇪
+                </span>
+                Arrastra un archivo aquí o haz clic para elegirlo
+              </span>
             )}
           </label>
           <button type="button" className="btn secondary" onClick={browseFiles}>
@@ -372,7 +376,12 @@ export default function App() {
           </select>
         </div>
 
-        {status === 'busy' && <p className="msg">{message}</p>}
+        {status === 'busy' && (
+          <>
+            <p className="msg busy-msg">{message}</p>
+            <div className="progress" role="progressbar" aria-label="Traduciendo" />
+          </>
+        )}
         {status === 'error' && <p className="msg error">{message}</p>}
         {warning && <p className="msg warning">{warning}</p>}
 
@@ -411,18 +420,6 @@ export default function App() {
               </div>
               <p className="muted">El texto traducido se dibujó sobre el original.</p>
               <img className="preview" src={result.blobUrl} alt="Imagen traducida" />
-              {result.text && (
-                <details className="page-text">
-                  <summary>Texto traducido ({LANGUAGES.find((l) => l.value === toLang)?.label})</summary>
-                  <p>{result.text}</p>
-                </details>
-              )}
-              {result.ocrText && result.ocrText.trim() && (
-                <details className="page-text">
-                  <summary>Texto detectado por el OCR (original)</summary>
-                  <p className="ocr-text">{result.ocrText}</p>
-                </details>
-              )}
             </section>
           ))}
       </main>
