@@ -13,10 +13,19 @@ export interface OcrResult {
   lines: OcrLine[];
 }
 
-export async function ocrImage(image: Blob | ImageLike): Promise<OcrResult> {
+/** Convierte la imagen a Blob; tesseract.js acepta mejor blob/DataURL en navegador. */
+function toBlob(image: Blob | HTMLCanvasElement): Promise<Blob> {
+  return image instanceof Blob
+    ? Promise.resolve(image)
+    : new Promise((resolve, reject) => {
+        image.toBlob((b) => (b ? resolve(b) : reject(new Error('No se pudo generar la imagen para OCR'))), 'image/png');
+      });
+}
+
+export async function ocrImage(image: Blob | HTMLCanvasElement): Promise<OcrResult> {
   const worker = await createWorker('eng');
   try {
-    const { data } = await worker.recognize(image as ImageLike);
+    const { data } = await worker.recognize(await toBlob(image) as unknown as ImageLike);
     const raw = (data as { lines?: unknown[] } | null)?.lines;
     const lines: OcrLine[] = Array.isArray(raw)
       ? raw

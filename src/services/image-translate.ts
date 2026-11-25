@@ -91,7 +91,9 @@ export async function translateImageToCanvas(
     if (translated.trim()) translatedLines.push({ line, translated });
   }
 
+  let translatedText = '';
   if (translatedLines.length > 0) {
+    translatedText = translatedLines.map((t) => t.translated).join('\n');
     for (const { line, translated } of translatedLines) {
       const x = Math.max(0, line.x * scaleFactor + 2);
       const y = line.y * scaleFactor;
@@ -101,12 +103,13 @@ export async function translateImageToCanvas(
   } else {
     const translated = await translateText(ocr.text, to);
     if (translated.trim()) {
+      translatedText = translated;
       const size = 12;
       drawLineOnCanvas(ctx, translated, 6, size + 8, size, canvas.width - 20);
     }
   }
 
-  return { canvas, text: translatedLines.map((t) => t.translated).join('\n'), ocrText };
+  return { canvas, text: translatedText, ocrText };
 }
 
 export function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob> {
