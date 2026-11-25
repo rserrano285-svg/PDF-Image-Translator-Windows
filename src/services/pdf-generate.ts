@@ -10,6 +10,8 @@ export interface TranslatedItem {
   height: number;
   /** Color de fondo original bajo el texto (hex). */
   background?: string;
+  /** Color del texto original (hex). */
+  color?: string;
 }
 
 export interface TranslatedPage {
@@ -124,13 +126,21 @@ export async function generatePdf(pages: TranslatedPage[]): Promise<Blob> {
       if (size < 3.5) size = 3.5;
 
       // 3) Dibujar la traducción sobre la línea base original.
+      let textColor = dark ? { r: 1, g: 1, b: 1 } : { r: 0.08, g: 0.08, b: 0.08 };
+      const original = item.color ? hexToRgb(item.color) : null;
+      if (original) {
+        // Se conserva el color original si tiene contraste suficiente con el fondo.
+        const contrast = Math.abs(luminance(original) - luminance(background));
+        if (contrast > 0.3) textColor = original;
+      }
+
       try {
         page.drawText(text, {
           x: Math.max(0, item.x),
           y: item.y,
           size,
           font,
-          color: dark ? rgb(1, 1, 1) : rgb(0.08, 0.08, 0.08),
+          color: rgb(textColor.r, textColor.g, textColor.b),
         });
       } catch {
         // Si alguna cadena no se puede codificar, se deja la línea original visible.

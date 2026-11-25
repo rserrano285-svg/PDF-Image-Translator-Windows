@@ -136,6 +136,7 @@ export default function App() {
               maxWidth: item.maxWidth,
               height: item.height,
               background: item.background,
+              color: item.color,
             },
           ];
         });
