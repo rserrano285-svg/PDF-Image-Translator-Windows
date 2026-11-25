@@ -24,12 +24,41 @@ interface ImageResult {
   downloadName: string;
 }
 
-type Result = PdfResult | ImageResult;
+type Result = PdfResult | ImageResult | null;
+
+function fileThumbUrl(file: File): string {
+  try {
+    return URL.createObjectURL(file);
+  } catch {
+    return '';
+  }
+}
+
+function isImageFile(file: File): boolean {
+  return (file.type || '').startsWith('image/');
+}
+
+function isPdfFile(file: File): boolean {
+  return detectKind(file) === 'pdf';
+}
 
 const LANGUAGES: { value: Lang; label: string }[] = [
   { value: 'es', label: 'Español' },
   { value: 'en', label: 'Inglés' },
 ];
+
+function classNames(...parts: (string | Record<string, boolean> | undefined)[]): string {
+  const names: string[] = [];
+  for (const part of parts) {
+    if (!part) continue;
+    if (typeof part === 'string') {
+      names.push(part);
+    } else {
+      for (const [name, value] of Object.entries(part)) if (value) names.push(name);
+    }
+  }
+  return names.join(' ');
+}
 
 function detectKind(file: File): 'pdf' | 'image' {
   const name = file.name.toLowerCase();
@@ -58,9 +87,12 @@ export default function App() {
   const [status, setStatus] = useState<'idle' | 'busy' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [warning, setWarning] = useState('');
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<Result>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [dark, setDark] = useState<boolean>(readStoredDarkMode);
+  const [thumbUrl, setThumbUrl] = useState('');
+  const thumbRef = useRef('');
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     try {
@@ -77,6 +109,13 @@ export default function App() {
     };
   }, [result]);
 
+  useEffect(
+    () => () => {
+      if (thumbRef.current) URL.revokeObjectURL(thumbRef.current);
+    },
+    []
+  );
+
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null;
     setFile(f);
@@ -85,6 +124,43 @@ export default function App() {
     setWarning('');
     setStatus('idle');
     setMessage('');
+
+    if (thumbRef.current) URL.revokeObjectURL(thumbRef.current);
+    thumbRef.current = f ? fileThumbUrl(f) : '';
+    setThumbUrl(thumbRef.current);
+
+    if (f && isImageFile(f)) {
+      // Al adjuntar una imagen se traduce automáticamente; el usuario ve
+      // el resultado en el mismo lugar donde está su archivo.
+      setTimeout(() => {
+        void translateImage();
+      }, 300);
+    }
+  }
+
+  function onDragOver(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    setDragging(true);
+  }
+
+  function onDragLeave(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    setDragging(false);
+  }
+
+  function onDrop(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    setDragging(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) {
+      const input = inputRef.current;
+      if (input) {
+        const dt = new DataTransfer();
+        dt.items.add(f);
+        input.files = dt.files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
   }
 
   function browseFiles() {
@@ -180,7 +256,12 @@ export default function App() {
     setMessage('Reconociendo y traduciendo el texto de la imagen…');
     try {
       const { translateImageToCanvas, canvasToBlob } = await import('./services/image-translate');
-      const { canvas } = await translateImageToCanvas(file);
+      const { canvas, text } = await translateImageToCanvas(file, toLang);
+      if (!text.trim()) {
+        setWarning('No se encontró texto que traducir en la imagen.');
+        setStatus('idle');
+        return;
+      }
       const blob = await canvasToBlob(canvas, file.type || 'image/png');
       setResult({
         type: 'image',
@@ -213,14 +294,30 @@ export default function App() {
       </header>
 
       <main className="card">
-        <section className="drop-zone">
-          <label className="file-input">
-            <input ref={inputRef} type="file" accept="application/pdf,image/*" onChange={onFileChange} />
+        <section className="drop-zone" onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
+          <label className={classNames('drop-zone-label', { dragging })}>
+            <input
+              ref={inputRef}
+              type="file"
+              accept="application/pdf,image/*"
+              onChange={onFileChange}
+            />
             {file ? (
               <span className="file-meta">
-                <strong>{file.name}</strong>
-                <span className="size">
-                  {formatBytes(file.size)} · {detectKind(file) === 'pdf' ? 'PDF' : 'Imagen'}
+                <span className="thumb">
+                  {isImageFile(file) && thumbUrl ? (
+                    <img src={thumbUrl} alt="" className="thumb-img" />
+                  ) : isPdfFile(file) ? (
+                    <span className="thumb-icon">📄</span>
+                  ) : (
+                    <span className="thumb-icon">🖼</span>
+                  )}
+                </span>
+                <span>
+                  <strong>{file.name}</strong>
+                  <span className="size">
+                    {formatBytes(file.size)} · {detectKind(file) === 'pdf' ? 'PDF' : 'Imagen'}
+                  </span>
                 </span>
               </span>
             ) : (

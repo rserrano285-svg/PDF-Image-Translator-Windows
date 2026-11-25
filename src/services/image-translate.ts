@@ -1,5 +1,5 @@
 import { ocrImage } from './ocr';
-import { translateText } from './translate';
+import { translateText, type Lang } from './translate';
 
 function loadImage(blob: Blob): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -28,7 +28,8 @@ function wrapTextLines(text: string, ctx: CanvasRenderingContext2D, maxWidth: nu
 }
 
 export async function translateImageToCanvas(
-  blob: Blob
+  blob: Blob,
+  to: Lang = 'es'
 ): Promise<{ canvas: HTMLCanvasElement; text: string }> {
   const img = await loadImage(blob);
   const canvas = document.createElement('canvas');
@@ -40,7 +41,7 @@ export async function translateImageToCanvas(
   ctx.drawImage(img, 0, 0);
 
   const text = await ocrImage(blob);
-  const translated = await translateText(text, 'es');
+  const translated = await translateText(text, to);
 
   if (translated.trim()) {
     const size = 14;
