@@ -413,13 +413,13 @@ export default function App() {
               <img className="preview" src={result.blobUrl} alt="Imagen traducida" />
               {result.text && (
                 <details className="page-text">
-                  <summary>Texto traducido</summary>
+                  <summary>Texto traducido ({LANGUAGES.find((l) => l.value === toLang)?.label})</summary>
                   <p>{result.text}</p>
                 </details>
               )}
               {result.ocrText && result.ocrText.trim() && (
                 <details className="page-text">
-                  <summary>Texto detectado por el OCR</summary>
+                  <summary>Texto detectado por el OCR (original)</summary>
                   <p className="ocr-text">{result.ocrText}</p>
                 </details>
               )}
