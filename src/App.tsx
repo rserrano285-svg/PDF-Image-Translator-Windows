@@ -103,7 +103,7 @@ export default function App() {
     try {
       const { renderPdfPages } = await import('./services/pdf-render');
       const { generatePdf } = await import('./services/pdf-generate');
-      const { translateText } = await import('./services/translate');
+      const { translateLines } = await import('./services/translate');
 
       const buf = await file.arrayBuffer();
       const pages = await renderPdfPages(buf);
@@ -115,16 +115,30 @@ export default function App() {
       }
 
       // Traduce el texto de cada página (sin perder el formato: la imagen de la
-      // página original se conserva y el texto traducido se dibuja sobre ella).
+      // página original se conserva y solo se sustituyen las líneas traducidas).
       // Se traducen varias páginas en paralelo para acelerar el proceso.
       setMessage('Traduciendo páginas…');
       const translatePage = async (page: RenderedPage): Promise<TranslatedPage> => {
-        const items = [];
-        for (const item of page.textItems) {
-          // eslint-disable-next-line no-await-in-loop
-          const translated = await translateText(item.str, toLang);
-          items.push({ str: translated, x: item.x, y: item.y, height: item.height });
-        }
+        const translated = await translateLines(
+          page.textItems.map((item) => item.str),
+          toLang
+        );
+        const items = page.textItems.flatMap((item, index) => {
+          const text = (translated[index] ?? '').trim();
+          // Si no cambió (ya estaba en el idioma destino) se deja el original.
+          if (!text || text === item.str.trim()) return [];
+          return [
+            {
+              str: text,
+              x: item.x,
+              y: item.y,
+              width: item.width,
+              maxWidth: item.maxWidth,
+              height: item.height,
+              background: item.background,
+            },
+          ];
+        });
         return { image: page.image, pageWidth: page.pageWidth, pageHeight: page.pageHeight, items };
       };
 
@@ -134,6 +148,7 @@ export default function App() {
         // eslint-disable-next-line no-await-in-loop
         const batchResults = await Promise.all(batch.map((p) => translatePage(p)));
         translatedPages.push(...batchResults);
+        setMessage(`Traduciendo… ${Math.min(i + batch.length, selected.length)}/${selected.length} páginas`);
       }
 
       setMessage('Generando el PDF traducido…');
