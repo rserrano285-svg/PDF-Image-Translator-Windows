@@ -67,17 +67,20 @@ export async function translateImageToCanvas(
   ctx.drawImage(img, 0, 0);
 
   // Ampliamos 2× para el OCR: reconoce mejor texto en imágenes grandes.
-  const scale = 2;
-  const ocrCanvas = document.createElement('canvas');
-  ocrCanvas.width = Math.max(1, Math.round(canvas.width * scale));
-  ocrCanvas.height = Math.max(1, Math.round(canvas.height * scale));
-  const octx = ocrCanvas.getContext('2d');
-  if (octx) octx.drawImage(canvas, 0, 0, ocrCanvas.width, ocrCanvas.height);
+  // Primero OCR a escala 1×; si no encuentra texto, prueba con 2×.
+  let ocr = await ocrImage(canvas);
+  let scaleFactor = 1;
+  if (!ocr.text.trim()) {
+    const ocrCanvas = document.createElement('canvas');
+    ocrCanvas.width = Math.max(1, Math.round(canvas.width * 2));
+    ocrCanvas.height = Math.max(1, Math.round(canvas.height * 2));
+    const octx = ocrCanvas.getContext('2d');
+    if (octx) octx.drawImage(canvas, 0, 0, ocrCanvas.width, ocrCanvas.height);
+    ocr = await ocrImage(ocrCanvas);
+    scaleFactor = canvas.width / ocrCanvas.width;
+  }
 
-  const ocr = await ocrImage(ocrCanvas);
   const ocrText = ocr.lines.length ? ocr.lines.map((l) => l.str).join('\n') : ocr.text;
-
-  const scaleFactor = canvas.width / ocrCanvas.width; // 0.5 (coords del OCR a la imagen)
 
   // Traduce cada línea del OCR, de modo que se dibuja en su lugar.
   const translatedLines: { line: OcrLine; translated: string }[] = [];
