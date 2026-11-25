@@ -22,6 +22,10 @@ interface ImageResult {
   type: 'image';
   blobUrl: string;
   downloadName: string;
+  /** Texto detectado por OCR en la imagen. */
+  ocrText: string;
+  /** Texto traducido que se dibujó sobre la imagen. */
+  text: string;
 }
 
 type Result = PdfResult | ImageResult | null;
@@ -256,7 +260,7 @@ export default function App() {
     setMessage('Reconociendo y traduciendo el texto de la imagen…');
     try {
       const { translateImageToCanvas, canvasToBlob } = await import('./services/image-translate');
-      const { canvas, text } = await translateImageToCanvas(file, toLang);
+      const { canvas, text, ocrText } = await translateImageToCanvas(file, toLang);
       if (!text.trim()) {
         setWarning('No se encontró texto que traducir en la imagen.');
         setStatus('idle');
@@ -267,6 +271,8 @@ export default function App() {
         type: 'image',
         blobUrl: URL.createObjectURL(blob),
         downloadName: file.name,
+        ocrText,
+        text,
       });
       setMessage('');
       setStatus('idle');
@@ -394,9 +400,29 @@ export default function App() {
               </div>
               <p className="muted">El texto traducido se dibujó sobre el original.</p>
               <img className="preview" src={result.blobUrl} alt="Imagen traducida" />
+              {result.text && (
+                <details className="page-text">
+                  <summary>Texto traducido</summary>
+                  <p>{result.text}</p>
+                </details>
+              )}
+              {result.ocrText && result.ocrText.trim() && (
+                <details className="page-text">
+                  <summary>Texto detectado por el OCR</summary>
+                  <p className="ocr-text">{result.ocrText}</p>
+                </details>
+              )}
             </section>
           ))}
       </main>
+      <footer className="footer">
+        <span className="footer-text">
+          Código abierto —{' '}
+          <a href="https://github.com/rserrano285-svg/pdf_image_traslator" target="_blank" rel="noopener noreferrer">
+            Repositorio en GitHub
+          </a>
+        </span>
+      </footer>
     </div>
   );
 }

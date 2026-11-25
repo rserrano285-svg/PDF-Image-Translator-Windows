@@ -1,10 +1,12 @@
-import { createWorker } from 'tesseract.js';
+import { createWorker, type ImageLike } from 'tesseract.js';
 
-export async function ocrImage(imageBlob: Blob): Promise<string> {
+export async function ocrImage(
+  image: Blob | ImageLike
+): Promise<string> {
   const worker = await createWorker('eng');
   try {
     await worker.load();
-    const { data } = await worker.recognize(imageBlob);
+    const { data } = await worker.recognize(image as ImageLike);
     return data?.text ?? '';
   } finally {
     await worker.terminate();

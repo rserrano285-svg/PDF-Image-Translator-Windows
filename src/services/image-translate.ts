@@ -30,7 +30,7 @@ function wrapTextLines(text: string, ctx: CanvasRenderingContext2D, maxWidth: nu
 export async function translateImageToCanvas(
   blob: Blob,
   to: Lang = 'es'
-): Promise<{ canvas: HTMLCanvasElement; text: string }> {
+): Promise<{ canvas: HTMLCanvasElement; text: string; ocrText: string }> {
   const img = await loadImage(blob);
   const canvas = document.createElement('canvas');
   canvas.width = img.naturalWidth || img.width || 800;
@@ -40,25 +40,36 @@ export async function translateImageToCanvas(
 
   ctx.drawImage(img, 0, 0);
 
-  const text = await ocrImage(blob);
-  const translated = await translateText(text, to);
+  // Ampliamos 2× para el OCR: reconoce mejor texto en imágenes grandes.
+  const scale = 2;
+  const ocrCanvas = document.createElement('canvas');
+  ocrCanvas.width = Math.max(1, Math.round(canvas.width * scale));
+  ocrCanvas.height = Math.max(1, Math.round(canvas.height * scale));
+  const octx = ocrCanvas.getContext('2d');
+  if (octx) octx.drawImage(canvas, 0, 0, ocrCanvas.width, ocrCanvas.height);
 
-  if (translated.trim()) {
-    const size = 14;
-    const lines = wrapTextLines(translated, ctx, canvas.width - 20).slice(0, 20);
-    ctx.font = `bold ${size}px sans-serif`;
+  const ocrText = await ocrImage(ocrCanvas);
+  const text = await translateText(ocrText, to);
+
+  if (text.trim()) {
+    const size = 12;
+    const lines = wrapTextLines(text, ctx, canvas.width - 20).slice(0, 30);
+    const bandHeight = Math.min(lines.length * size * 1.25 + 10, canvas.height);
+    // Fondo translúcido detrás del texto traducido.
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
-    ctx.lineWidth = 2;
-    let y = size + 12;
+    ctx.fillRect(0, 0, canvas.width, bandHeight);
+    ctx.font = `bold ${size}px sans-serif`;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.lineWidth = 1.5;
+    let y = size + 8;
     for (const line of lines) {
-      ctx.strokeText(line, 10, y);
-      ctx.fillText(line, 10, y);
-      y += size * 1.2;
+      ctx.strokeText(line, 6, y);
+      ctx.fillText(line, 6, y);
+      y += size * 1.25;
     }
   }
 
-  return { canvas, text: translated };
+  return { canvas, text, ocrText };
 }
 
 export function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob> {

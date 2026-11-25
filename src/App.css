@@ -305,6 +305,15 @@ html.dark .msg.warning {
   font-weight: 600;
 }
 
+.ocr-text {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--muted);
+  margin: 0.5rem 0 0;
+}
+
 .preview {
   width: 100%;
   max-height: 340px;
@@ -318,6 +327,28 @@ html.dark .msg.warning {
 
 html.dark .preview {
   background: #282a34;
+}
+
+.footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.footer-text {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.footer-text a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.footer-text a:hover {
+  text-decoration: underline;
 }
 
 .muted {
