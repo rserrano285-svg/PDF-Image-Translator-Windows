@@ -1,4 +1,4 @@
-import { createWorker, type ImageLike } from 'tesseract.js';
+import { createWorker } from 'tesseract.js';
 
 export interface OcrLine {
   str: string;
@@ -25,31 +25,26 @@ function toBlob(image: Blob | HTMLCanvasElement): Promise<Blob> {
 export async function ocrImage(image: Blob | HTMLCanvasElement): Promise<OcrResult> {
   const worker = await createWorker('eng');
   try {
-    const { data } = await worker.recognize(await toBlob(image) as unknown as ImageLike);
-    const raw = (data as { lines?: unknown[] } | null)?.lines;
-    const lines: OcrLine[] = Array.isArray(raw)
-      ? raw
-          .map((entry) => {
-            const item = entry as {
-              wtext?: string;
-              text?: string;
-              bbox?: { x0?: number; y0?: number; x1?: number; y1?: number };
-            };
-            const x0 = Math.round(item.bbox?.x0 ?? 0);
-            const y0 = Math.round(item.bbox?.y0 ?? 0);
-            const x1 = Math.round(item.bbox?.x1 ?? 0);
-            const y1 = Math.round(item.bbox?.y1 ?? 0);
-            return {
-              str: (item.wtext || item.text || '').trim(),
-              x: x0,
-              y: y0,
-              w: Math.max(0, x1 - x0),
-              h: Math.max(0, y1 - y0),
-            };
-          })
-          .filter((l) => l.str)
-      : [];
-    return { text: (data as { text?: string } | null)?.text ?? '', lines };
+    // En v7 hay que pedir explícitamente los bloques para obtener posiciones.
+    const { data } = await worker.recognize(await toBlob(image), {}, { text: true, blocks: true });
+    const lines: OcrLine[] = [];
+    for (const block of data.blocks ?? []) {
+      for (const paragraph of block.paragraphs ?? []) {
+        for (const line of paragraph.lines ?? []) {
+          const str = (line.text ?? '').replace(/\s+/g, ' ').trim();
+          if (!str) continue;
+          const bbox = line.bbox ?? { x0: 0, y0: 0, x1: 0, y1: 0 };
+          lines.push({
+            str,
+            x: Math.round(bbox.x0 ?? 0),
+            y: Math.round(bbox.y0 ?? 0),
+            w: Math.max(1, Math.round((bbox.x1 ?? 0) - (bbox.x0 ?? 0))),
+            h: Math.max(1, Math.round((bbox.y1 ?? 0) - (bbox.y0 ?? 0))),
+          });
+        }
+      }
+    }
+    return { text: data.text ?? '', lines };
   } finally {
     await worker.terminate();
   }
