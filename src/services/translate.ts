@@ -10,7 +10,24 @@
  * en un solo bloque separadas por saltos de línea (Google los conserva).
  */
 
-export type Lang = 'es' | 'en';
+export type Lang =
+  | 'es'
+  | 'en'
+  | 'fr'
+  | 'de'
+  | 'it'
+  | 'pt'
+  | 'nl'
+  | 'pl'
+  | 'ru'
+  | 'zh'
+  | 'ja'
+  | 'ko'
+  | 'ar'
+  | 'tr';
+
+const LANG_LIST: Lang[] = ['es', 'en', 'fr', 'de', 'it', 'pt', 'nl', 'pl', 'ru', 'zh', 'ja', 'ko', 'ar', 'tr'];
+const LANG_CODES = new Set<string>(LANG_LIST);
 
 const GOOGLE_URL = 'https://clients5.google.com/translate_a/t?client=dict-chrome-ex';
 const GOOGLE_SINGLE_URL = 'https://translate.googleapis.com/translate_a/single?client=gtx&dt=t';
@@ -125,7 +142,7 @@ function parseGoogleReply(data: unknown): GoogleReply | null {
   return null;
 }
 
-async function requestGoogle(text: string, from: Lang | 'auto', to: Lang): Promise<GoogleReply> {
+async function requestGoogle(text: string, from: string | 'auto', to: Lang): Promise<GoogleReply> {
   const url = `${GOOGLE_URL}&sl=${from}&tl=${to}&q=${encodeURIComponent(text)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Traducción HTTP ${res.status}`);
@@ -134,7 +151,7 @@ async function requestGoogle(text: string, from: Lang | 'auto', to: Lang): Promi
   return reply;
 }
 
-async function requestGoogleSingle(text: string, from: Lang | 'auto', to: Lang): Promise<GoogleReply> {
+async function requestGoogleSingle(text: string, from: string | 'auto', to: Lang): Promise<GoogleReply> {
   const url = `${GOOGLE_SINGLE_URL}&sl=${from}&tl=${to}&q=${encodeURIComponent(text)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Traducción HTTP ${res.status}`);
@@ -143,7 +160,7 @@ async function requestGoogleSingle(text: string, from: Lang | 'auto', to: Lang):
   return reply;
 }
 
-async function requestMyMemory(text: string, from: Lang, to: Lang): Promise<string> {
+async function requestMyMemory(text: string, from: string, to: Lang): Promise<string> {
   const url = `${MYMEMORY_URL}?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Traducción HTTP ${res.status}`);
@@ -168,7 +185,11 @@ function isTranslatable(text: string): boolean {
   return true;
 }
 
-async function translateOne(text: string, from: Lang | null, to: Lang): Promise<string> {
+function normalizeTarget(to: string): Lang {
+  return LANG_CODES.has(to) ? (to as Lang) : 'es';
+}
+
+async function translateOne(text: string, from: string | null, to: Lang): Promise<string> {
   try {
     const reply = await withSlot(() => requestGoogle(text, from ?? 'auto', to));
     if (reply.detected === to) return text; // ya estaba en el idioma de destino
@@ -186,7 +207,7 @@ async function translateOne(text: string, from: Lang | null, to: Lang): Promise<
     // Se intenta con MyMemory.
   }
   try {
-    const source: Lang = from ?? (to === 'es' ? 'en' : 'es');
+    const source: string = from ?? (to === 'es' ? 'en' : 'es');
     const translated = (await withSlot(() => requestMyMemory(text, source, to))).trim();
     if (translated && !looksLikeError(translated)) return translated;
   } catch {
@@ -202,7 +223,7 @@ async function translateOne(text: string, from: Lang | null, to: Lang): Promise<
 interface PendingLine {
   index: number;
   text: string;
-  from: Lang | null;
+  from: string | null;
 }
 
 function chunkLines(items: PendingLine[], maxLength: number): PendingLine[][] {
@@ -223,13 +244,13 @@ function chunkLines(items: PendingLine[], maxLength: number): PendingLine[][] {
   return chunks;
 }
 
-async function translateBlock(block: PendingLine[], from: Lang, to: Lang): Promise<string[]> {
+async function translateBlock(block: PendingLine[], from: string | null, to: Lang): Promise<string[]> {
   if (block.length === 1) {
     return [await translateOne(block[0].text, from, to)];
   }
   try {
     const joined = block.map((line) => line.text).join('\n');
-    const reply = await withSlot(() => requestGoogle(joined, from, to));
+    const reply = await withSlot(() => requestGoogle(joined, from ?? 'auto', to));
     const parts = reply.text.split('\n');
     if (parts.length === block.length) {
       return parts.map((part, i) => {
@@ -249,6 +270,7 @@ async function translateBlock(block: PendingLine[], from: Lang, to: Lang): Promi
  * letras) se devuelven sin cambios.
  */
 export async function translateLines(lines: string[], to: Lang): Promise<string[]> {
+  const target = normalizeTarget(to);
   const out = [...lines];
   const pending: PendingLine[] = [];
 
@@ -257,7 +279,7 @@ export async function translateLines(lines: string[], to: Lang): Promise<string[
     if (!text || !LETTER_RE.test(text)) return;
     if (!isTranslatable(text)) return;
     const detected = detectLanguage(text);
-    if (detected === to) return;
+    if (detected === target) return;
     pending.push({ index, text, from: detected });
   });
   if (!pending.length) return out;
@@ -267,7 +289,7 @@ export async function translateLines(lines: string[], to: Lang): Promise<string[
 
   const tasks: Promise<void>[] = [];
 
-  for (const lang of ['es', 'en'] as Lang[]) {
+  for (const lang of Array.from(new Set(known.map((line) => line.from).filter((l): l is string => !!l)))) {
     const group = known.filter((line) => line.from === lang);
     for (const block of chunkLines(group, MAX_CHUNK)) {
       tasks.push(
@@ -297,7 +319,7 @@ export async function translateLines(lines: string[], to: Lang): Promise<string[
 }
 
 export async function translateText(text: string, to: string): Promise<string> {
-  const target: Lang = to === 'en' ? 'en' : 'es';
+  const target = normalizeTarget(to);
   if (!text.trim()) return '';
   const [translated] = await translateLines([text], target);
   return translated;

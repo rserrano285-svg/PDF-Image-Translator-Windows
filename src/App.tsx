@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import type { Lang } from './services/translate';
 import type { RenderedPage } from './services/pdf-render';
 import type { TranslatedPage } from './services/pdf-generate';
 import './App.css';
@@ -6,7 +7,22 @@ import './App.css';
 const MAX_PAGES = 60;
 const CONCURRENT_PAGES = 4; // páginas traducidas en paralelo
 
-type Lang = 'es' | 'en';
+const LANGUAGES: { value: Lang; label: string }[] = [
+  { value: 'es', label: 'Español' },
+  { value: 'en', label: 'Inglés' },
+  { value: 'fr', label: 'Francés' },
+  { value: 'de', label: 'Alemán' },
+  { value: 'it', label: 'Italiano' },
+  { value: 'pt', label: 'Portugués' },
+  { value: 'nl', label: 'Neerlandés' },
+  { value: 'pl', label: 'Polaco' },
+  { value: 'ru', label: 'Ruso' },
+  { value: 'zh', label: 'Chino' },
+  { value: 'ja', label: 'Japonés' },
+  { value: 'ko', label: 'Coreano' },
+  { value: 'ar', label: 'Árabe' },
+  { value: 'tr', label: 'Turco' },
+];
 
 interface PdfResult {
   type: 'pdf';
@@ -45,11 +61,6 @@ function isImageFile(file: File): boolean {
 function isPdfFile(file: File): boolean {
   return detectKind(file) === 'pdf';
 }
-
-const LANGUAGES: { value: Lang; label: string }[] = [
-  { value: 'es', label: 'Español' },
-  { value: 'en', label: 'Inglés' },
-];
 
 function classNames(...parts: (string | Record<string, boolean> | undefined)[]): string {
   const names: string[] = [];
