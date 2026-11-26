@@ -445,3 +445,8 @@ html.dark .preview-scroll {
     background-position: -200% 0;
   }
 }
+
+
+.footer-text a[href*="paypal"] {
+  color: #db2777;
+}

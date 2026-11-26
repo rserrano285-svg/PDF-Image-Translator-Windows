@@ -54,3 +54,8 @@ npm test   # jest de CRA
 | `tesseract.js` | OCR del texto de las imágenes |
 | `@vitalets/google-translate-api` | Traducción (Google Translate) |
 | `electron`, `electron-builder` | Empaquetado para escritorio |
+
+
+## Apoyo
+
+Esta app es gratuita y de código abierto. Si te ahorra tiempo, puedes apoyar el desarrollo con una donación voluntaria: [PayPal (rene285serrano)](https://paypal.me/rene285serrano). Cualquier ayuda cuenta.
