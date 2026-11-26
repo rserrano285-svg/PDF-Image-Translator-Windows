@@ -433,7 +433,7 @@ export default function App() {
         <span className="footer-text">
           ¿Te sirve?{' '}
           <a href="https://paypal.me/rene285serrano" target="_blank" rel="noopener noreferrer">
-            Donar / Apoyar el proyecto ♥
+            Donar / Apoyar El Proyecto ♥
           </a>
         </span>
       </footer>
