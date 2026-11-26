@@ -30,6 +30,8 @@ interface PdfResult {
   downloadName: string;
   pageCount: number;
   totalPages: number;
+  /** Orientación de la primera página, para ajustar la impresión. */
+  orientation: 'landscape' | 'portrait';
   texts: string[];
   pageImages: string[];
 }
@@ -85,9 +87,10 @@ function formatBytes(n: number): string {
 
 function readStoredDarkMode(): boolean {
   try {
-    return window.localStorage.getItem('pdfTranslator:dark') === 'true';
+    const stored = window.localStorage.getItem('pdfTranslator:dark');
+    return stored === null ? true : stored === 'true'; // cristal oscuro por defecto (V2)
   } catch {
-    return false;
+    return true;
   }
 }
 
@@ -249,6 +252,8 @@ export default function App() {
         downloadName: file.name.replace(/\.pdf$/i, '') + '_traducido.pdf',
         pageCount: selected.length,
         totalPages: pages.length,
+        orientation:
+          selected.length && selected[0].pageWidth >= selected[0].pageHeight ? 'landscape' : 'portrait',
         texts: translatedPages.map((p) => p.items.map((i) => i.str).join('\n')),
         pageImages,
       });
@@ -295,7 +300,9 @@ export default function App() {
             <img src={`${process.env.PUBLIC_URL || ''}icon.svg`} alt="" />
           </span>
           <div>
-            <h1>Traductor de PDF e imágenes</h1>
+            <h1>
+            Traductor de PDF e imágenes <span className="version">V2</span>
+          </h1>
             <p className="sub">
               Traduce PDFs de hasta {MAX_PAGES} páginas y imágenes; el resultado conserva el formato
               original.
@@ -395,6 +402,11 @@ export default function App() {
                   {result.totalPages > result.pageCount ? ` de ${result.totalPages}` : ''})
                 </a>
               </div>
+              <p className="orientation">
+                Orientación detectada:{' '}
+                <strong>{result.orientation === 'landscape' ? 'Horizontal / Apaisado' : 'Vertical'}</strong>{' '}
+                · la página se ajusta automáticamente para imprimir.
+              </p>
               {result.pageImages && result.pageImages.length > 0 && (
                 <div className="preview-scroll">
                   <h3>Vista previa</h3>
@@ -425,7 +437,7 @@ export default function App() {
       </main>
       <footer className="footer">
         <span className="footer-text">
-          Código abierto —{' '}
+          V2 · Código abierto —{' '}
           <a href="https://github.com/rserrano285-svg/PDF-Image-Translator-Windows" target="_blank" rel="noopener noreferrer">
             Repositorio en GitHub
           </a>

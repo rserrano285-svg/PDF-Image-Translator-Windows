@@ -92,9 +92,18 @@ export async function generatePdf(pages: TranslatedPage[]): Promise<Blob> {
   const font = await doc.embedFont(StandardFonts.Helvetica);
 
   for (const pageData of pages) {
-    const page = doc.addPage([pageData.pageWidth, pageData.pageHeight]);
+    // Normaliza el tamaño según la orientación original (apaisado/vertical)
+    // para que el PDF resultante se imprima correctamente.
+    const landscape = pageData.pageWidth >= pageData.pageHeight;
+    const w = landscape
+      ? Math.max(pageData.pageWidth, pageData.pageHeight)
+      : Math.min(pageData.pageWidth, pageData.pageHeight);
+    const h = landscape
+      ? Math.min(pageData.pageWidth, pageData.pageHeight)
+      : Math.max(pageData.pageWidth, pageData.pageHeight);
+    const page = doc.addPage([w, h]);
     const png = await doc.embedPng(pageData.image);
-    page.drawImage(png, { x: 0, y: 0, width: pageData.pageWidth, height: pageData.pageHeight });
+    page.drawImage(png, { x: 0, y: 0, width: w, height: h });
 
     for (const item of pageData.items) {
       const text = sanitizeForPdf(item.str);
