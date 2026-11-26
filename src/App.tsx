@@ -301,7 +301,7 @@ export default function App() {
           </span>
           <div>
             <h1>
-            Traductor de PDF e imágenes <span className="version">V2</span>
+            PDF Translator <span className="version">V2</span><span className="brand-tag">RS App</span>
           </h1>
             <p className="sub">
               Traduce PDFs de hasta {MAX_PAGES} páginas y imágenes; el resultado conserva el formato
@@ -437,7 +437,7 @@ export default function App() {
       </main>
       <footer className="footer">
         <span className="footer-text">
-          RS App · V2 · Código abierto —{' '}
+          RS App · PDF Translator V2 · Código abierto —{' '}
           <a href="https://github.com/rserrano285-svg/PDF-Image-Translator-Windows" target="_blank" rel="noopener noreferrer">
             Repositorio en GitHub
           </a>
