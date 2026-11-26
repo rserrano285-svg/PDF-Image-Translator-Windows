@@ -426,7 +426,7 @@ export default function App() {
       <footer className="footer">
         <span className="footer-text">
           Código abierto —{' '}
-          <a href="https://github.com/rserrano285-svg/pdf_image_traslator" target="_blank" rel="noopener noreferrer">
+          <a href="https://github.com/rserrano285-svg/PDF-Image-Translator-Windows" target="_blank" rel="noopener noreferrer">
             Repositorio en GitHub
           </a>
         </span>
