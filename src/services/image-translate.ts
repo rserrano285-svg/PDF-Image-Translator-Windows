@@ -106,21 +106,57 @@ function replaceLine(ctx: CanvasRenderingContext2D, line: OcrLine, text: string)
 
   const bg = sampleBackground(ctx, x, y, w, h);
   const ink = sampleInk(ctx, x, y, w, h, bg);
+  const maxWidth = Math.max(1, w - 3);
+  const words = text.split(/\s+/).filter(Boolean);
 
-  // Cada línea conserva el tamaño de letra del texto original (títulos
-  // grandes, cuerpo pequeño); no se reduce para caber en su ancho.
-  const size = Math.max(6, Math.min(line.h, ctx.canvas.height));
-  ctx.font = `bold ${size}px sans-serif`;
-  const drawWidth = Math.min(ctx.canvas.width - x, Math.max(w, Math.ceil(ctx.measureText(text).width) + 4));
+  // Ajusta el texto al ancho original: parte del tamaño de la línea y,
+  // si hace falta, reduce la fuente o parte en hasta 2 renglones dentro
+  // de la caja original para que nunca se corte en el borde de la imagen.
+  const wrapLines = (size: number): string[] => {
+    ctx.font = `bold ${size}px sans-serif`;
+    const out: string[] = [];
+    let current = '';
+    for (const word of words) {
+      const candidate = current ? current + ' ' + word : word;
+      if (current && ctx.measureText(candidate).width > maxWidth) {
+        out.push(current);
+        current = word;
+      } else {
+        current = candidate;
+      }
+    }
+    if (current) out.push(current);
+    return out;
+  };
+
+  let size = Math.max(6, Math.min(line.h, 32));
+  let rows = wrapLines(size);
+  let attempts = 0;
+  while ((rows.length > 2 || rows.some((row) => ctx.measureText(row).width > maxWidth)) && size > 6 && attempts < 30) {
+    size -= 0.5;
+    rows = wrapLines(size);
+    attempts += 1;
+  }
+  // Palabra individual demasiado larga: encogerla al ancho disponible.
+  const widest = Math.max(...rows.map((row) => ctx.measureText(row).width));
+  if (widest > maxWidth) {
+    size = Math.max(4, size * maxWidth / widest);
+    ctx.font = `bold ${size}px sans-serif`;
+  }
+
   ctx.fillStyle = toHex(bg);
-  ctx.fillRect(x, y, drawWidth, h);
+  ctx.fillRect(x, y, w, h);
 
   let color = ink ?? (luminance(bg) < 0.5 ? { r: 255, g: 255, b: 255 } : { r: 0, g: 0, b: 0 });
   if (Math.abs(luminance(color) - luminance(bg)) < 0.25) {
     color = luminance(bg) < 0.5 ? { r: 255, g: 255, b: 255 } : { r: 0, g: 0, b: 0 };
   }
   ctx.fillStyle = toHex(color);
-  ctx.fillText(text, line.x, Math.min(ctx.canvas.height - 2, line.y + h * 0.78));
+  const lineHeight = h / rows.length;
+  rows.forEach((row, index) => {
+    const baseline = Math.min(ctx.canvas.height - 2, line.y + h * 0.78 + index * lineHeight);
+    ctx.fillText(row, line.x, baseline);
+  });
 }
 
 export async function translateImageToCanvas(
