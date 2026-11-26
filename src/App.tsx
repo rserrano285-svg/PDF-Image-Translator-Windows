@@ -181,6 +181,32 @@ export default function App() {
     inputRef.current?.click();
   }
 
+  async function saveWithPicker(e: React.MouseEvent<HTMLAnchorElement>) {
+    const picker = (window as unknown as {
+      showSaveFilePicker?: (options: object) => Promise<{
+        createWritable: () => Promise<{ write: (data: Blob) => Promise<void>; close: () => Promise<void> }>;
+      }>;
+    }).showSaveFilePicker;
+    if (!picker || !result) return;
+    e.preventDefault();
+    try {
+      const handle = await picker({
+        suggestedName: result.downloadName,
+        types: result.type === 'pdf'
+          ? [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }]
+          : [{ description: 'Imagen', accept: { 'image/*': ['.png', '.jpg', '.jpeg'] } }],
+      });
+      const blob = await (await fetch(result.blobUrl)).blob();
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') return;
+      setStatus('error');
+      setMessage('No se pudo guardar: ' + (error as Error).message);
+    }
+  }
+
   function toggleDarkMode() {
     setDark((d) => !d);
   }
@@ -301,7 +327,7 @@ export default function App() {
           </span>
           <div>
             <h1>
-            PDF Translator <span className="version">V2</span><span className="brand-tag">RS App</span>
+            PDF Image Translator
           </h1>
             <p className="sub">
               Traduce PDFs de hasta {MAX_PAGES} páginas y imágenes; el resultado conserva el formato
@@ -397,8 +423,8 @@ export default function App() {
             <section className="result">
               <div className="result-head">
                 <h2>PDF traducido</h2>
-                <a className="btn download" href={result.blobUrl} download={result.downloadName}>
-                  Guardar PDF traducido ({result.pageCount}
+                <a className="btn download" href={result.blobUrl} download={result.downloadName} onClick={saveWithPicker}>
+                  Descargar PDF traducido ({result.pageCount}
                   {result.totalPages > result.pageCount ? ` de ${result.totalPages}` : ''})
                 </a>
               </div>
@@ -426,8 +452,8 @@ export default function App() {
             <section className="result">
               <div className="result-head">
                 <h2>Imagen traducida</h2>
-                <a className="btn download" href={result.blobUrl} download={result.downloadName}>
-                  Guardar imagen traducida
+                <a className="btn download" href={result.blobUrl} download={result.downloadName} onClick={saveWithPicker}>
+                  Descargar imagen traducida
                 </a>
               </div>
               <p className="muted">El texto traducido se dibujó sobre el original.</p>
@@ -437,7 +463,7 @@ export default function App() {
       </main>
       <footer className="footer">
         <span className="footer-text">
-          RS App · PDF Translator V2 · Código abierto —{' '}
+          PDF Image Translator V2 · Código abierto —{' '}
           <a href="https://github.com/rserrano285-svg/PDF-Image-Translator-Windows" target="_blank" rel="noopener noreferrer">
             Repositorio en GitHub
           </a>

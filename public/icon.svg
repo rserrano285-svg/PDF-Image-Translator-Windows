@@ -1,30 +1,69 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0b1220"/><stop offset="0.55" stop-color="#10233f"/><stop offset="1" stop-color="#152f57"/>
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="0.55" stop-color="#10233f"/>
+      <stop offset="1" stop-color="#152f57"/>
     </linearGradient>
-    <radialGradient id="halo" cx="0.32" cy="0.22" r="0.78">
-      <stop offset="0" stop-color="#3b82f6" stop-opacity="0.45"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    <radialGradient id="halo" cx="0.35" cy="0.25" r="0.75">
+      <stop offset="0" stop-color="#3b82f6" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="text" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#bfdbfe"/>
+    <linearGradient id="page" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d8e7ff"/>
     </linearGradient>
-    <linearGradient id="badge" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#7c3aed"/>
+    <linearGradient id="fold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#93c5fd"/>
+      <stop offset="1" stop-color="#60a5fa"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ef4444"/>
+      <stop offset="1" stop-color="#b91c1c"/>
     </linearGradient>
     <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000814" flood-opacity="0.5"/>
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000814" flood-opacity="0.55"/>
     </filter>
   </defs>
+
   <rect width="512" height="512" rx="96" fill="url(#bg)"/>
   <rect width="512" height="512" rx="96" fill="url(#halo)"/>
-  <rect x="3" y="3" width="506" height="506" rx="93" fill="none" stroke="#60a5fa" stroke-opacity="0.25" stroke-width="3"/>
-  <text x="248" y="298" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="176" font-weight="800" fill="url(#text)" letter-spacing="-6">RS</text>
+  <rect x="3" y="3" width="506" height="506" rx="93" fill="none" stroke="#60a5fa" stroke-opacity="0.22" stroke-width="3"/>
+
+  <!-- Documento PDF -->
   <g filter="url(#soft)">
-    <rect x="292" y="318" width="132" height="112" rx="28" fill="url(#badge)"/>
-    <!-- documento PDF -->
-    <path d="M316 342h54l24 24v40a6 6 0 0 1-6 6h-72a6 6 0 0 1-6-6v-58a6 6 0 0 1 6-6z" fill="none" stroke="#fff" stroke-width="9"/>
-    <path d="M370 342v24h24" fill="none" stroke="#fff" stroke-width="9"/>
-    <rect x="326" y="382" width="40" height="7" rx="3" fill="#fff"/>
+    <path d="M150 116h132l78 78v186a18 18 0 0 1-18 18H150a18 18 0 0 1-18-18V134a18 18 0 0 1 18-18z" fill="url(#page)"/>
+    <path d="M282 116v62a16 16 0 0 0 16 16h62z" fill="url(#fold)"/>
   </g>
+
+  <!-- L├¡neas de texto -->
+  <g fill="#2563eb" opacity="0.55">
+    <rect x="164" y="236" width="120" height="11" rx="5"/>
+    <rect x="164" y="262" width="86" height="11" rx="5"/>
+    <rect x="164" y="288" width="104" height="11" rx="5"/>
+    <rect x="164" y="314" width="66" height="11" rx="5"/>
+  </g>
+
+  <!-- Etiqueta PDF -->
+  <g>
+    <rect x="164" y="348" width="88" height="34" rx="9" fill="url(#red)"/>
+    <text x="208" y="371" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="21" font-weight="800" fill="#fff" letter-spacing="1">PDF</text>
+  </g>
+
+  <!-- Flechas de traducci├│n (bucle) -->
+  <g fill="none" stroke="url(#arrow)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M322 214c34-22 78-16 104 12"/>
+    <path d="M426 226l-12 26-26-12"/>
+    <path d="M430 322c-34 22-78 16-104-12"/>
+    <path d="M326 310l12-26 26 12"/>
+  </g>
+  <circle cx="300" cy="222" r="9" fill="#60a5fa"/>
+  <circle cx="450" cy="314" r="9" fill="#a78bfa"/>
+
+  <!-- Destello -->
+  <path d="M392 126l5 14 14 5-14 5-5 14-5-14-14-5 14-5z" fill="#e0f2fe" opacity="0.9"/>
 </svg>
