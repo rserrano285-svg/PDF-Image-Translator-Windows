@@ -1,4 +1,4 @@
-# PDF Image Translator V2
+# PDF Image Translator V3
 
 App de escritorio (Windows, via Electron) que traduce textos de PDF e imágenes manteniendo el formato original.
 
@@ -61,8 +61,19 @@ npm test   # jest de CRA
 Esta app es gratuita y de código abierto. Si te ahorra tiempo, puedes apoyar el desarrollo con una donación voluntaria: [PayPal (rene285serrano)](https://paypal.me/rene285serrano). Cualquier ayuda cuenta.
 
 
-## V2 — Cristal oscuro
+## Versiones
+
+La versión actual es **V3 — Cristal claro** (ver [CHANGELOG.md](CHANGELOG.md)).
+
+### V3 — Cristal claro
+
+- Interfaz **cristal claro** con acentos azules, paneles translúcidos y fondo con degradados suaves.
+- El **modo claro está activo por defecto**; el botón de la cabecera cambia a cristal oscuro y se recuerda la preferencia.
+- El botón de resultado dice **Guardar PDF traducido** y muestra el número de páginas.
+- La barra de progreso tiene una animación visible durante la traducción.
+
+### V2 — Cristal oscuro
 
 - Interfaz **cristal oscuro** con acentos azules, paneles translúcidos y logo renovado.
 - Muestra la **orientación detectada** (horizontal/apaisado o vertical) y ajusta el PDF generado para que se imprima correctamente.
-- El modo oscuro está activo por defecto; puedes cambiarlo con el botón de la cabecera.
+- El modo oscuro estaba activo por defecto; se podía cambiar con el botón de la cabecera.

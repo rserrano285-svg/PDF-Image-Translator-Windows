@@ -88,7 +88,7 @@ function formatBytes(n: number): string {
 function readStoredDarkMode(): boolean {
   try {
     const stored = window.localStorage.getItem('pdfTranslator:dark');
-    return stored === null ? true : stored === 'true'; // cristal oscuro por defecto (V2)
+    return stored === null ? false : stored === 'true'; // cristal claro por defecto (V3)
   } catch {
     return true;
   }
@@ -327,8 +327,8 @@ export default function App() {
           </span>
           <div>
             <h1>
-            PDF Image Translator
-          </h1>
+              PDF Image Translator <span className="version">V3</span>
+            </h1>
             <p className="sub">
               Traduce PDFs de hasta {MAX_PAGES} páginas y imágenes; el resultado conserva el formato
               original.
@@ -424,7 +424,7 @@ export default function App() {
               <div className="result-head">
                 <h2>PDF traducido</h2>
                 <a className="btn download" href={result.blobUrl} download={result.downloadName} onClick={saveWithPicker}>
-                  Descargar PDF traducido ({result.pageCount}
+                  Guardar PDF traducido ({result.pageCount}
                   {result.totalPages > result.pageCount ? ` de ${result.totalPages}` : ''})
                 </a>
               </div>
@@ -453,7 +453,7 @@ export default function App() {
               <div className="result-head">
                 <h2>Imagen traducida</h2>
                 <a className="btn download" href={result.blobUrl} download={result.downloadName} onClick={saveWithPicker}>
-                  Descargar imagen traducida
+                  Guardar imagen traducida
                 </a>
               </div>
               <p className="muted">El texto traducido se dibujó sobre el original.</p>
@@ -463,7 +463,7 @@ export default function App() {
       </main>
       <footer className="footer">
         <span className="footer-text">
-          PDF Image Translator V2 · Código abierto —{' '}
+          PDF Image Translator V3 · Código abierto —{' '}
           <a href="https://github.com/rserrano285-svg/PDF-Image-Translator-Windows" target="_blank" rel="noopener noreferrer">
             Repositorio en GitHub
           </a>
