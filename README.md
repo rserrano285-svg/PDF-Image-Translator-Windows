@@ -1,4 +1,4 @@
-# PDF Image Translator V3
+# PDF Image Translator
 
 App de escritorio (Windows, via Electron) que traduce textos de PDF e imágenes manteniendo el formato original.
 
@@ -63,9 +63,16 @@ Esta app es gratuita y de código abierto. Si te ahorra tiempo, puedes apoyar el
 
 ## Versiones
 
-La versión actual es **V3 — Cristal claro** (ver [CHANGELOG.md](CHANGELOG.md)).
+La versión actual está documentada en [CHANGELOG.md](CHANGELOG.md) y en las notas de release del repositorio.
 
-### V3 — Cristal claro
+### Colores y formato conservados en imágenes
+
+- El OCR de imágenes trabaja **por palabra** y detecta el color de la tinta de cada una: las etiquetas coloreadas (por ejemplo, rojas sobre fondo negro) conservan su color al traducirse.
+- La línea se divide en tramos de igual color; cada tramo se traduce y se dibuja con su color original.
+- El fondo se toma del **color dominante de la zona**, con lo que se respetan fondos oscuros, claros y banners de color.
+- La fuente se reduce hasta que la traducción cabe en el ancho **y** en la altura disponible hasta la siguiente línea: el texto ya no se pisa.
+
+### Cristal claro
 
 - Interfaz **cristal claro** con acentos azules, paneles translúcidos y fondo con degradados suaves.
 - El **modo claro está activo por defecto**; el botón de la cabecera cambia a cristal oscuro y se recuerda la preferencia.

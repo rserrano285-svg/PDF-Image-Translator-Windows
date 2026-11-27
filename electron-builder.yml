@@ -1,5 +1,6 @@
 appId: com.rserr.pdf_image_translator
 productName: PDF Image Translator
+artifactName: PDF Image Translator Setup.exe
 extraMetadata:
   main: electron/main.cjs
 files:

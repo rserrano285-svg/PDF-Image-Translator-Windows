@@ -327,7 +327,7 @@ export default function App() {
           </span>
           <div>
             <h1>
-              PDF Image Translator <span className="version">V3</span>
+              PDF Image Translator
             </h1>
             <p className="sub">
               Traduce PDFs de hasta {MAX_PAGES} páginas y imágenes; el resultado conserva el formato
@@ -463,7 +463,7 @@ export default function App() {
       </main>
       <footer className="footer">
         <span className="footer-text">
-          PDF Image Translator V3 · Código abierto —{' '}
+          PDF Image Translator · Código abierto —{' '}
           <a href="https://github.com/rserrano285-svg/PDF-Image-Translator-Windows" target="_blank" rel="noopener noreferrer">
             Repositorio en GitHub
           </a>

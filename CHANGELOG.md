@@ -1,6 +1,14 @@
 # Changelog — PDF Image Translator Windows
 
-Convención de versiones RS App: cada cambio visible se etiqueta con una V y se registra aquí. El número de versión de `package.json` sigue el mismo orden (V3 → 0.3.0).
+Convención de versiones RS App: cada cambio visible se etiqueta con una V y se registra aquí. El número de versión de `package.json` sigue el mismo orden (V4 → 0.4.0).
+
+## V4 — Colores y formato conservados en imágenes (2026-11-27)
+
+- `src/services/ocr.ts` devuelve también las **palabras** con sus coordenadas (`OcrWord`).
+- `src/services/image-translate.ts` agrupa las palabras en líneas, detecta el color de la tinta de cada palabra y divide la línea en tramos de igual color (etiqueta roja + resto blanco).
+- El fondo se obtiene del color dominante de la zona: se conservan fondos negros, claros y banners de color, sin rectángulos grises.
+- La traducción se ajusta en ancho **y** alto hasta la siguiente línea, evitando que las líneas se pisen.
+- Insignia y pie de página actualizados a V4; sin cambios en la traducción de PDFs.
 
 ## V3 — Cristal claro (2026-11-27)
 
