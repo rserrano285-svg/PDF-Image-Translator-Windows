@@ -1,6 +1,12 @@
 # Changelog — PDF Image Translator Windows
 
-Convención de versiones RS App: cada cambio visible se etiqueta con una V y se registra aquí. El número de versión de `package.json` sigue el mismo orden (V4 → 0.4.0).
+Convención de versiones RS App: cada cambio visible se etiqueta con una V y se registra aquí. El número de versión de `package.json` sigue el mismo orden (0.4.1).
+
+## Corrección — Guardar en Descargas (2026-11-27)
+
+- El botón «Guardar archivo traducido» abre el diálogo con **Descargas** como carpeta inicial; el usuario puede elegir otra si quiere.
+- Se eliminaron las etiquetas de versión del nombre visible de la app; las versiones viven aquí y en las notas de release.
+- El mockup de diseño se guarda en `docs/pdf-mockup.html`, dentro del proyecto (nada de archivos del programa en Documentos).
 
 ## V4 — Colores y formato conservados en imágenes (2026-11-27)
 

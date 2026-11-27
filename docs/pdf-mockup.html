@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vista previa diseño Cristal Claro — PDF Image Translator</title>
+<style>
+  :root{--bg:#f2f6fc;--glass:rgba(255,255,255,.72);--glass2:rgba(255,255,255,.92);--line:rgba(15,23,42,.10);--text:#0f172a;--muted:#64748b;--blue:#3b82f6;--blue2:#2563eb;}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:radial-gradient(900px 500px at 12% -10%,rgba(59,130,246,.16),transparent 60%),radial-gradient(700px 400px at 100% 0%,rgba(124,58,237,.10),transparent 55%),var(--bg);padding:28px 16px 40px}
+  .page{width:min(760px,100%);margin:0 auto}
+  .badge{display:inline-block;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue2);background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.3);padding:.3rem .6rem;border-radius:99px;margin-bottom:14px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .mark{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,var(--blue),#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;box-shadow:0 8px 24px rgba(59,130,246,.30)}
+  h1{margin:0;font-size:1.35rem;letter-spacing:-.02em}
+  .sub{margin:2px 0 0;color:var(--muted);font-size:.85rem}
+  .toggle{color:var(--text);background:var(--glass);border:1px solid var(--line);border-radius:10px;padding:.55rem .8rem;font-weight:600;backdrop-filter:blur(12px)}
+  .card{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:20px;backdrop-filter:blur(20px);box-shadow:0 18px 45px rgba(15,23,42,.08)}
+  .drop{border:1.5px dashed rgba(59,130,246,.45);border-radius:14px;padding:22px;text-align:center;background:rgba(59,130,246,.045)}
+  .drop .ico{font-size:26px}
+  .hint{color:var(--muted);font-size:.9rem}
+  .file{display:flex;align-items:center;gap:12px;justify-content:center}
+  .thumb{width:46px;height:46px;border-radius:10px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);display:flex;align-items:center;justify-content:center;font-size:22px}
+  .file b{display:block}.file small{color:var(--muted)}
+  .row{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+  select{flex:1;min-width:160px;background:var(--glass2);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:.7rem .85rem;backdrop-filter:blur(10px)}
+  .btn{border:0;border-radius:11px;padding:.72rem 1.25rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--blue),#2563eb);box-shadow:0 8px 22px rgba(37,99,235,.35);cursor:pointer}
+  .btn.sec{background:var(--glass2);border:1px solid var(--line);box-shadow:none}
+  .progress{height:5px;border-radius:99px;background:rgba(15,23,42,.08);margin-top:14px;overflow:hidden}
+  .progress i{display:block;height:100%;width:42%;background:linear-gradient(90deg,var(--blue),#8b5cf6)}
+  .msg{color:var(--muted);font-size:.85rem;margin-top:8px}
+  .result{margin-top:14px}
+  .result h2{font-size:1.05rem;margin:0 0 10px}
+  .result-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .preview{width:100%;height:170px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(59,130,246,.10),rgba(255,255,255,.6));display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.85rem}
+  .footer{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:.75rem;margin-top:18px}
+  .footer a{color:var(--blue2);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="page">
+  <span class="badge">Vista previa del diseño · V2 · aún no aplicado</span>
+  <header>
+    <div class="brand"><span class="mark">L</span><div><h1>PDF Image Translator <span class="badge" style="margin:0 0 0 6px">V2</span></h1><p class="sub">Traduce PDFs e imágenes conservando el formato original</p></div></div>
+    <button class="toggle">☾ Modo oscuro</button>
+  </header>
+  <div class="card">
+    <div class="drop">
+      <div class="ico">⇪</div>
+      <div class="file"><span class="thumb">📄</span><span><b>informe_traducido.pdf</b><small>1.4 MB · PDF</small></span></div>
+      <p class="hint">Arrastra un archivo aquí o haz clic para elegirlo</p>
+    </div>
+    <div class="row"><select><option>Español</option><option>Inglés</option><option>Francés</option></select><button class="btn sec">Examinar archivo…</button></div>
+    <div class="row"><button class="btn">Traducir PDF</button></div>
+    <div class="progress"><i></i></div><p class="msg">Traduciendo… 12/20 páginas</p>
+  </div>
+  <div class="card result">
+    <div class="result-head"><h2>PDF traducido</h2><a class="btn">Guardar PDF traducido (20)</a></div>
+    <div class="preview">Vista previa de la página traducida</div>
+    <p class="msg">Orientación detectada: <b>Horizontal / Apaisado</b> · la página se ajusta automáticamente para imprimir.</p>
+    <p class="msg">Código abierto · Donar / Apoyar El Proyecto ♥ · Repositorio en GitHub</p>
+  </div>
+  <div class="footer"><span>Cristal claro · acentos azules</span><span><a href="#">GitHub</a></span><span><a href="#">Donar ♥</a></span></div>
+</div>
+</body>
+</html>

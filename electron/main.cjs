@@ -4,7 +4,7 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 
 const DEV_SERVER_URL = 'http://localhost:3000';
 
@@ -36,6 +36,19 @@ function resolveStartUrl() {
 }
 
 let mainWindow = null;
+
+// Guardar siempre en Descargas por defecto, sin dejar archivos regados.
+ipcMain.handle('save-translated-file', async (event, payload) => {
+  const { name, bytes, filters } = payload || {};
+  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+    title: 'Guardar archivo traducido',
+    defaultPath: path.join(app.getPath('downloads'), name || 'archivo-traducido'),
+    filters: filters || [{ name: 'Todos los archivos', extensions: ['*'] }],
+  });
+  if (canceled || !filePath) return { canceled: true };
+  await fs.promises.writeFile(filePath, Buffer.from(bytes || []));
+  return { canceled: false, filePath };
+});
 
 function createWindow(url) {
   mainWindow = new BrowserWindow({

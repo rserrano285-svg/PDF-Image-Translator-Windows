@@ -182,12 +182,40 @@ export default function App() {
   }
 
   async function saveWithPicker(e: React.MouseEvent<HTMLAnchorElement>) {
+    if (!result) return;
+
+    // En Electron el diálogo abre siempre en Descargas; el usuario puede elegir otra carpeta.
+    const electron = (window as unknown as {
+      require?: (module: string) => {
+        ipcRenderer?: { invoke: (channel: string, payload: unknown) => Promise<{ canceled: boolean; filePath?: string }> };
+      };
+    }).require?.('electron');
+    if (electron?.ipcRenderer) {
+      e.preventDefault();
+      try {
+        const blob = await (await fetch(result.blobUrl)).blob();
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        const saved = await electron.ipcRenderer.invoke('save-translated-file', {
+          name: result.downloadName,
+          bytes,
+          filters: result.type === 'pdf'
+            ? [{ name: 'PDF', extensions: ['pdf'] }]
+            : [{ name: 'Imagen', extensions: ['png', 'jpg', 'jpeg'] }],
+        });
+        if (!saved.canceled && saved.filePath) setMessage('Guardado en: ' + saved.filePath);
+      } catch (error) {
+        setStatus('error');
+        setMessage('No se pudo guardar: ' + (error as Error).message);
+      }
+      return;
+    }
+
     const picker = (window as unknown as {
       showSaveFilePicker?: (options: object) => Promise<{
         createWritable: () => Promise<{ write: (data: Blob) => Promise<void>; close: () => Promise<void> }>;
       }>;
     }).showSaveFilePicker;
-    if (!picker || !result) return;
+    if (!picker) return; // sin selector: el navegador descarga en Descargas
     e.preventDefault();
     try {
       const handle = await picker({
