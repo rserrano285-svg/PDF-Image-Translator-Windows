@@ -34,7 +34,7 @@ const GOOGLE_SINGLE_URL = 'https://translate.googleapis.com/translate_a/single?c
 const MYMEMORY_URL = 'https://api.mymemory.translated.net/get';
 const MAX_CHUNK = 1800;
 const MAX_CONCURRENT = 8;
-const LETTER_RE = /[A-Za-zÀ-ÖØ-öø-ÿ]/;
+const LETTER_RE = /\p{L}/u;
 
 /* ------------------------------------------------------------------ */
 /* Concurrencia                                                        */
@@ -179,7 +179,7 @@ function looksLikeError(text: string): boolean {
  * (p. ej. "C" → "do", "kPa", "A-102"), que Google traduce sin sentido.
  */
 function isTranslatable(text: string): boolean {
-  const letters = text.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/g)?.length ?? 0;
+  const letters = Array.from(text.matchAll(/\p{L}/gu)).length;
   if (letters < 2) return false;
   if (!text.includes(' ') && text.length <= 3) return false;
   return true;

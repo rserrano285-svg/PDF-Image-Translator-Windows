@@ -311,7 +311,7 @@ export async function renderPdfPages(data: ArrayBuffer, limit = Infinity): Promi
         const baseline = Math.max(...line.map((i) => i.y));
 
         // Solo interesa traducir líneas con letras (no códigos, números ni barras).
-        if (!/[A-Za-zÀ-ÖØ-öø-ÿ]/.test(str)) continue;
+        if (!/\p{L}/u.test(str)) continue;
 
         const background = ctx
           ? sampleBackground(

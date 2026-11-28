@@ -337,7 +337,7 @@ export async function translateImageToCanvas(
   } else {
     // Sin posiciones: se dibuja el bloque traducido al principio de la imagen.
     const text = await translateText(ocr.text, to);
-    if (text.trim()) {
+    if (text.trim() && text.trim() !== ocr.text.trim()) {
       const size = 12;
       const words = text.split(/\s+/).filter(Boolean);
       const lines: string[] = [];

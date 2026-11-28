@@ -96,7 +96,7 @@ function createWindow(url) {
   wc.on('render-process-gone', (e, details) => console.log('[main] render-process-gone', JSON.stringify(details)));
   wc.on('did-finish-load', () => console.log('[main] did-finish-load', wc.getURL()));
 
-  if (url.startsWith('http')) {
+  if (url.startsWith('http') || url.startsWith('file://')) {
     mainWindow.loadURL(url);
   } else if (fs.existsSync(url)) {
     mainWindow.loadFile(url);

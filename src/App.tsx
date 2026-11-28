@@ -106,6 +106,7 @@ export default function App() {
   const [dark, setDark] = useState<boolean>(readStoredDarkMode);
   const [thumbUrl, setThumbUrl] = useState('');
   const thumbRef = useRef('');
+  const translateTimerRef = useRef<number | null>(null);
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
@@ -146,7 +147,8 @@ export default function App() {
     if (f && isImageFile(f)) {
       // Al adjuntar una imagen se traduce automáticamente; el usuario ve
       // el resultado en el mismo lugar donde está su archivo.
-      setTimeout(() => {
+      if (translateTimerRef.current) window.clearTimeout(translateTimerRef.current);
+      translateTimerRef.current = window.setTimeout(() => {
         void translateImage(f);
       }, 300);
     }
