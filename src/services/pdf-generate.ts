@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
 
 export interface TranslatedItem {
   str: string;
@@ -21,79 +21,68 @@ export interface TranslatedPage {
   items: TranslatedItem[];
 }
 
-/** Caracteres extra que la codificación WinAnsi de las fuentes estándar soporta. */
-const WINANSI_EXTRA = new Set<number>([
-  0x20ac, 0x201a, 0x0192, 0x201e, 0x2026, 0x2020, 0x2021, 0x02c6, 0x2030, 0x0160, 0x2039,
-  0x0152, 0x017d, 0x2018, 0x2019, 0x201c, 0x201d, 0x2022, 0x2013, 0x2014, 0x02dc, 0x2122,
-  0x0161, 0x203a, 0x0153, 0x017e, 0x0178,
-]);
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('No se pudo cargar la imagen de la página'));
+    img.src = src;
+  });
+}
 
-const REPLACEMENTS: Record<string, string> = {
-  '\u2192': '->',
-  '\u2190': '<-',
-  '\u2191': '^',
-  '\u2193': 'v',
-  '\u2264': '<=',
-  '\u2265': '>=',
-  '\u2260': '!=',
-  '\u00b0': 'o',
-  '\u2713': 'v',
-  '\u2714': 'v',
-  '\u25cf': '-',
-  '\u25aa': '-',
-  '\u00a0': ' ',
-};
-
-/** Elimina caracteres que pdf-lib no puede codificar con Helvetica (WinAnsi). */
-function sanitizeForPdf(text: string): string {
-  let out = '';
-  for (const ch of text) {
-    const cp = ch.codePointAt(0) ?? 0;
-    if (cp === 9 || cp === 10 || cp === 13) {
-      out += ' ';
-    } else if (cp >= 32 && cp <= 126) {
-      out += ch;
-    } else if (cp >= 0xa0 && cp <= 0xff) {
-      out += ch;
-    } else if (WINANSI_EXTRA.has(cp)) {
-      out += ch;
-    } else if (REPLACEMENTS[ch]) {
-      out += REPLACEMENTS[ch];
+/** Ajusta el texto al ancho disponible, partiéndolo en renglones si hace falta. */
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  size: number
+): { lines: string[]; size: number } {
+  ctx.font = `bold ${size}px sans-serif`;
+  const words = text.split(/\s+/).filter(Boolean);
+  const build = (fontSize: number) => {
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    const rows: string[] = [];
+    let current = '';
+    for (const word of words) {
+      const candidate = current ? current + ' ' + word : word;
+      if (current && ctx.measureText(candidate).width > maxWidth) {
+        rows.push(current);
+        current = word;
+      } else {
+        current = candidate;
+      }
     }
-    // El resto (emoji, CJK, símbolos raros) se descarta.
-  }
-  return out.replace(/\s+/g, ' ').trim();
-}
-
-function hexToRgb(hex?: string): { r: number; g: number; b: number } {
-  if (!hex) return { r: 1, g: 1, b: 1 };
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return { r: 1, g: 1, b: 1 };
-  const value = parseInt(m[1], 16);
-  return {
-    r: ((value >> 16) & 255) / 255,
-    g: ((value >> 8) & 255) / 255,
-    b: (value & 255) / 255,
+    if (current) rows.push(current);
+    return rows;
   };
-}
 
-function luminance(c: { r: number; g: number; b: number }): number {
-  return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+  let fontSize = size;
+  let lines = build(fontSize);
+  let guard = 0;
+  while ((lines.length > 2 || lines.some((l) => ctx.measureText(l).width > maxWidth)) && fontSize > 7 && guard < 30) {
+    fontSize -= 0.5;
+    lines = build(fontSize);
+    guard += 1;
+  }
+  const widest = Math.max(1, ...lines.map((l) => ctx.measureText(l).width));
+  if (widest > maxWidth) {
+    fontSize = Math.max(6, (fontSize * maxWidth) / widest);
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    lines = build(fontSize);
+  }
+  return { lines, size: fontSize };
 }
 
 /**
- * Genera un PDF nuevo: cada página es la imagen renderizada de la página
- * original (diagramas, imágenes y layout intactos). Sobre cada línea traducida
- * se tapa el texto original con el color de fondo y se escribe la traducción
- * ajustada al ancho de la línea para no invadir otras columnas.
+ * Genera un PDF nuevo: cada página conserva el diseño original (imagen
+ * renderizada) y el texto traducido se dibuja sobre esa imagen con las fuentes
+ * del sistema, por lo que funciona también con chino, ruso, árabe, japonés o
+ * coreano (que Helvetica/WinAnsi no puede codificar).
  */
 export async function generatePdf(pages: TranslatedPage[]): Promise<Blob> {
   const doc = await PDFDocument.create();
-  const font = await doc.embedFont(StandardFonts.Helvetica);
 
   for (const pageData of pages) {
-    // Normaliza el tamaño según la orientación original (apaisado/vertical)
-    // para que el PDF resultante se imprima correctamente.
     const landscape = pageData.pageWidth >= pageData.pageHeight;
     const w = landscape
       ? Math.max(pageData.pageWidth, pageData.pageHeight)
@@ -101,62 +90,56 @@ export async function generatePdf(pages: TranslatedPage[]): Promise<Blob> {
     const h = landscape
       ? Math.min(pageData.pageWidth, pageData.pageHeight)
       : Math.max(pageData.pageWidth, pageData.pageHeight);
-    const page = doc.addPage([w, h]);
-    const png = await doc.embedPng(pageData.image);
-    page.drawImage(png, { x: 0, y: 0, width: w, height: h });
+
+    const img = await loadImage(pageData.image);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth || Math.ceil(pageData.pageWidth);
+    canvas.height = img.naturalHeight || Math.ceil(pageData.pageHeight);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas no disponible para generar el PDF');
+    ctx.drawImage(img, 0, 0);
+    const sx = canvas.width / pageData.pageWidth;
+    const sy = canvas.height / pageData.pageHeight;
 
     for (const item of pageData.items) {
-      const text = sanitizeForPdf(item.str);
+      const text = item.str.replace(/\s+/g, ' ').trim();
       if (!text) continue;
 
-      const fontSize = item.height > 0 ? item.height : 10;
-      const background = hexToRgb(item.background);
-      const dark = luminance(background) < 0.45;
+      const fontSize = Math.max(6, item.height || 10);
+      const baselineTop = pageData.pageHeight - item.y; // canvas: origen arriba
+      const x = Math.max(0, (item.x - 1.5) * sx);
+      const yTop = (baselineTop - fontSize * 1.02) * sy;
+      const bg = item.background || '#ffffff';
 
-      // 1) Tapar el texto original (solo el área de esta línea).
-      const padX = 1.5;
-      const ascent = fontSize * 1.02;
-      const descent = fontSize * 0.3;
-      page.drawRectangle({
-        x: Math.max(0, item.x - padX),
-        y: item.y - descent,
-        width: Math.min(item.width + padX * 2, pageData.pageWidth - item.x),
-        height: ascent + descent,
-        color: rgb(background.r, background.g, background.b),
+      // 1) Tapar el texto original con el color de fondo muestreado.
+      ctx.fillStyle = bg;
+      ctx.fillRect(x, yTop, (item.width + 3) * sx, fontSize * 1.35 * sy);
+
+      // 2) Dibujar la traducción en el mismo lugar, con fuentes Unicode del sistema.
+      const { lines, size } = wrapText(ctx, text, Math.max(20, (item.maxWidth ?? item.width) * sx * 1.04), fontSize * sy);
+      ctx.font = `bold ${size}px sans-serif`;
+      ctx.fillStyle = item.color || (luminanceHex(bg) < 0.5 ? '#ffffff' : '#111111');
+      const baselineCanvas = baselineTop * sy;
+      lines.forEach((line, index) => {
+        ctx.fillText(line, x + 2, baselineCanvas - size * 0.15 + index * size * 1.12);
       });
-
-      // 2) Ajustar el tamaño para que la traducción quepa en el espacio libre.
-      const widthAtOne = font.widthOfTextAtSize(text, 1);
-      const available = Math.max(item.width, item.maxWidth ?? item.width);
-      const maxWidth = Math.max(available, fontSize * 2) * 1.02;
-      let size = Math.min(fontSize, maxWidth / Math.max(widthAtOne, 0.0001));
-      const room = pageData.pageWidth - 4 - Math.max(0, item.x);
-      if (widthAtOne * size > room) size = room / Math.max(widthAtOne, 0.0001);
-      if (size < 3.5) size = 3.5;
-
-      // 3) Dibujar la traducción sobre la línea base original.
-      let textColor = dark ? { r: 1, g: 1, b: 1 } : { r: 0.08, g: 0.08, b: 0.08 };
-      const original = item.color ? hexToRgb(item.color) : null;
-      if (original) {
-        // Se conserva el color original si tiene contraste suficiente con el fondo.
-        const contrast = Math.abs(luminance(original) - luminance(background));
-        if (contrast > 0.3) textColor = original;
-      }
-
-      try {
-        page.drawText(text, {
-          x: Math.max(0, item.x),
-          y: item.y,
-          size,
-          font,
-          color: rgb(textColor.r, textColor.g, textColor.b),
-        });
-      } catch {
-        // Si alguna cadena no se puede codificar, se deja la línea original visible.
-      }
     }
+
+    const png = await doc.embedPng(canvas.toDataURL('image/png'));
+    const page = doc.addPage([w, h]);
+    page.drawImage(png, { x: 0, y: 0, width: w, height: h });
   }
 
   const bytes = await doc.save();
   return new Blob([bytes as unknown as BlobPart], { type: 'application/pdf' });
+}
+
+function luminanceHex(hex: string): number {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return 1;
+  const v = parseInt(m[1], 16);
+  const r = (v >> 16) & 255;
+  const g = (v >> 8) & 255;
+  const b = v & 255;
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
 }
