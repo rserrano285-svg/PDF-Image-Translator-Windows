@@ -373,6 +373,25 @@ export async function translateImageToCanvas(
     }
   }
 
+  // Respaldo: el OCR por palabras puede dejar líneas sin procesar (por ejemplo
+  // textos finos o con poco contraste). Se traducen desde las líneas detectadas.
+  const processed = new Set(translated.map((t) => t.trim().toLowerCase()));
+  for (const line of ocr.lines) {
+    const str = line.str.trim();
+    if (!str || !/\p{L}/u.test(str) || processed.has(str.toLowerCase())) continue;
+    // eslint-disable-next-line no-await-in-loop
+    const text = await translateText(str, to);
+    if (!text.trim() || text.trim() === str) continue;
+    replaceLine(ctx, {
+      str: text,
+      x: Math.round(line.x * scaleFactor),
+      y: Math.round(line.y * scaleFactor),
+      w: Math.round(line.w * scaleFactor),
+      h: Math.round(line.h * scaleFactor),
+    }, text);
+    translated.push(text);
+  }
+
   if (!translated.length) {
     throw new Error('No se pudo traducir la imagen: no se encontró texto legible o la traducción no cambió el texto.');
   }
