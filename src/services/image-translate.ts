@@ -360,6 +360,10 @@ export async function translateImageToCanvas(
     }
   }
 
+  if (!translated.length) {
+    throw new Error('No se pudo traducir la imagen: no se encontró texto legible o la traducción no cambió el texto.');
+  }
+
   return { canvas, text: translated.join('\n'), ocrText };
 }
 
