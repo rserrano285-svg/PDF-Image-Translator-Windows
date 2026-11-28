@@ -181,6 +181,17 @@ function drawFitted(
     if (current) rows.push(current);
     if (rows.every((row) => ctx.measureText(row).width <= maxWidth) && rows.length * size * 1.08 <= maxHeight) break;
   }
+  // Si no caben varias filas al tamaño mínimo, se fuerza una sola línea y se
+  // reduce la fuente para no tapar la línea siguiente.
+  if (rows.length * size * 1.08 > maxHeight) {
+    rows = [text];
+    ctx.font = `${bold ? 'bold ' : ''}${size}px sans-serif`;
+    const single = ctx.measureText(text).width;
+    if (single > maxWidth) {
+      size = Math.max(6, (size * maxWidth) / single);
+      ctx.font = `${bold ? 'bold ' : ''}${size}px sans-serif`;
+    }
+  }
   ctx.fillStyle = toHex(color);
   const lineHeight = size * 1.08;
   rows.forEach((row, index) => {
