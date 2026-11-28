@@ -303,17 +303,19 @@ export async function translateImageToCanvas(
       ctx.fillRect(left, top, boxW, boxH);
 
       const lineW = Math.max(24, line.x1 - line.x);
-      const base = Math.max(10, Math.min(line.h * 1.05, 32));
+      const base = Math.max(10, Math.min(line.h * 1.05, 48));
+      // El ancho de cada segmento parte del ancho REAL de sus palabras; no se
+      // reduce por la longitud de la traducción (antes hacía la letra pequeña).
       const weights = segments.map((segment) =>
-        Math.max(24, segment.x1 - segment.x0, (segment.out || segment.text).length * base * 0.5)
+        Math.max(12, segment.x1 - segment.x0)
       );
-      const sumW = weights.reduce((a, b) => a + b, 0);
-      const bold = line.h >= 38;
+      const sumW = Math.max(1, weights.reduce((a, b) => a + b, 0));
       let cursor = line.x;
       for (let index = 0; index < segments.length; index += 1) {
         const segment = segments[index];
-        const segW = Math.max(28, (lineW * weights[index]) / sumW);
-        drawFitted(ctx, segment.out || segment.text, cursor, top, segW, line.maxH, base, segment.color, bold);
+        const originalWidth = weights[index];
+        const segW = Math.max(originalWidth, (lineW * originalWidth) / sumW);
+        drawFitted(ctx, segment.out || segment.text, cursor, top, segW, line.maxH, base, segment.color, false);
         cursor += segW + 2;
         translated.push(segment.out || segment.text);
       }
