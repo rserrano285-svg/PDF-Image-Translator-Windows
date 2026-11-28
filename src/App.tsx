@@ -147,7 +147,7 @@ export default function App() {
       // Al adjuntar una imagen se traduce automáticamente; el usuario ve
       // el resultado en el mismo lugar donde está su archivo.
       setTimeout(() => {
-        void translateImage();
+        void translateImage(f);
       }, 300);
     }
   }
@@ -184,18 +184,18 @@ export default function App() {
   async function saveWithPicker(e: React.MouseEvent<HTMLAnchorElement>) {
     if (!result) return;
 
-    // En Electron el diálogo abre siempre en Descargas; el usuario puede elegir otra carpeta.
-    const electron = (window as unknown as {
-      require?: (module: string) => {
-        ipcRenderer?: { invoke: (channel: string, payload: unknown) => Promise<{ canceled: boolean; filePath?: string }> };
+    // En Electron el diálogo se expone de forma segura mediante preload/contextBridge.
+    const electronAPI = (window as unknown as {
+      electronAPI?: {
+        saveTranslatedFile: (payload: object) => Promise<{ canceled: boolean; filePath?: string }>;
       };
-    }).require?.('electron');
-    if (electron?.ipcRenderer) {
+    }).electronAPI;
+    if (electronAPI) {
       e.preventDefault();
       try {
         const blob = await (await fetch(result.blobUrl)).blob();
         const bytes = new Uint8Array(await blob.arrayBuffer());
-        const saved = await electron.ipcRenderer.invoke('save-translated-file', {
+        const saved = await electronAPI.saveTranslatedFile({
           name: result.downloadName,
           bytes,
           filters: result.type === 'pdf'
@@ -298,7 +298,8 @@ export default function App() {
 
       setMessage('Generando el PDF traducido…');
       const blob = await generatePdf(translatedPages);
-      const pageImages = (await renderPdfPages(await blob.arrayBuffer())).map((p) => p.image);
+      // Solo se renderizan las primeras 5 páginas para la vista previa (evita OOM).
+      const pageImages = (await renderPdfPages(await blob.arrayBuffer(), 5)).map((p) => p.image);
 
       setResult({
         type: 'pdf',
@@ -319,24 +320,25 @@ export default function App() {
     }
   }
 
-  async function translateImage() {
-    if (!file) return;
+  async function translateImage(fileToTranslate: File | null = file) {
+    if (!fileToTranslate) return;
+    const currentFile = fileToTranslate;
     setStatus('busy');
     setWarning('');
     setMessage('Reconociendo y traduciendo el texto de la imagen…');
     try {
       const { translateImageToCanvas, canvasToBlob } = await import('./services/image-translate');
-      const { canvas, text } = await translateImageToCanvas(file, toLang);
+      const { canvas, text } = await translateImageToCanvas(currentFile, toLang);
       if (!text.trim()) {
         setWarning('No se encontró texto que traducir en la imagen.');
         setStatus('idle');
         return;
       }
-      const blob = await canvasToBlob(canvas, file.type || 'image/png');
+      const blob = await canvasToBlob(canvas, currentFile.type || 'image/png');
       setResult({
         type: 'image',
         blobUrl: URL.createObjectURL(blob),
-        downloadName: file.name,
+        downloadName: currentFile.name,
       });
       setMessage('');
       setStatus('idle');
@@ -418,7 +420,7 @@ export default function App() {
             </button>
           )}
           {kind === 'image' && (
-            <button type="button" className="btn primary" onClick={translateImage} disabled={status === 'busy'}>
+            <button type="button" className="btn primary" onClick={() => translateImage()} disabled={status === 'busy'}>
               {status === 'busy' ? 'Traduciendo…' : 'Traducir imagen'}
             </button>
           )}

@@ -3,10 +3,11 @@ import { translateText, type Lang } from './translate';
 
 function loadImage(blob: Blob): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
     const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('No se pudo cargar la imagen'));
-    img.src = URL.createObjectURL(blob);
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('No se pudo cargar la imagen')); };
+    img.src = url;
   });
 }
 
@@ -40,7 +41,8 @@ function toHex(c: Color): string {
 }
 
 function luminance(c: Color): number {
-  return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+  // getImageData devuelve canales 0-255; normalizamos a 0-1 para los umbrales.
+  return (0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b) / 255;
 }
 
 function distance(a: Color, b: Color): number {

@@ -250,12 +250,12 @@ function groupIntoLines(raw: RawItem[]): RawItem[][] {
   return lines;
 }
 
-export async function renderPdfPages(data: ArrayBuffer): Promise<RenderedPage[]> {
+export async function renderPdfPages(data: ArrayBuffer, limit = Infinity): Promise<RenderedPage[]> {
   const loadingTask = getDocument({ data });
   const doc = await loadingTask.promise;
   try {
     const pages: RenderedPage[] = [];
-    for (let n = 1; n <= doc.numPages; n += 1) {
+    for (let n = 1; n <= Math.min(doc.numPages, limit); n += 1) {
       const page = await doc.getPage(n);
       // Las coordenadas se guardan en puntos (escala 1) para que la página del
       // PDF final conserve su tamaño real; la imagen se renderiza más grande

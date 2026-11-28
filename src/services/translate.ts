@@ -117,7 +117,7 @@ interface GoogleReply {
 }
 
 function normalizeLang(value: unknown): Lang | null {
-  return value === 'es' || value === 'en' ? value : null;
+  return typeof value === 'string' && LANG_CODES.has(value) ? (value as Lang) : null;
 }
 
 function parseGoogleReply(data: unknown): GoogleReply | null {
@@ -144,7 +144,7 @@ function parseGoogleReply(data: unknown): GoogleReply | null {
 
 async function requestGoogle(text: string, from: string | 'auto', to: Lang): Promise<GoogleReply> {
   const url = `${GOOGLE_URL}&sl=${from}&tl=${to}&q=${encodeURIComponent(text)}`;
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
   if (!res.ok) throw new Error(`Traducción HTTP ${res.status}`);
   const reply = parseGoogleReply(await res.json());
   if (!reply) throw new Error('Respuesta de traducción no reconocida');
