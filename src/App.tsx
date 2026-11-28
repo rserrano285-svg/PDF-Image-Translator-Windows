@@ -493,7 +493,7 @@ export default function App() {
       </main>
       <footer className="footer">
         <span className="footer-text">
-          PDF Image Translator · Código abierto —{' '}
+          PDF Image Translator V2 · Código abierto —{' '}
           <a href="https://github.com/rserrano285-svg/PDF-Image-Translator-Windows" target="_blank" rel="noopener noreferrer">
             Repositorio en GitHub
           </a>
