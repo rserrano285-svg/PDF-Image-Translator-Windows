@@ -7,5 +7,7 @@ files:
   - build/**/*
   - electron/**/*
   - package.json
+win:
+  icon: icon.ico
 nsis:
   createDesktopShortcut: always
